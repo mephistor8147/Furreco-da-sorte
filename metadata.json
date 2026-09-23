@@ -1,0 +1,6 @@
+{
+  "name": "Furreco da Sorte - Estatísticas da Loteria Federal",
+  "description": "Estatísticas avançadas, probabilidades, gráficos de tendência, histórico inteligente e gerador de palpites da Loteria Federal com notificações automáticas.",
+  "requestFramePermissions": ["notifications"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

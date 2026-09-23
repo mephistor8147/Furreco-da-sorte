@@ -9,6 +9,7 @@ export interface NotificationSettings {
   alertBeforeDraw: boolean;
   alertOnHotDezena: boolean;
   soundEnabled: boolean;
+  highContrast: boolean;
 }
 
 export const DEFAULT_SETTINGS: NotificationSettings = {
@@ -17,6 +18,7 @@ export const DEFAULT_SETTINGS: NotificationSettings = {
   alertBeforeDraw: true,
   alertOnHotDezena: true,
   soundEnabled: true,
+  highContrast: false,
 };
 
 export const INITIAL_NOTIFICATIONS: PushNotification[] = [

@@ -35,9 +35,14 @@ export default function App() {
     saveStoredNotifications(notifications);
   }, [notifications]);
 
-  // Sync settings to storage
+  // Sync settings to storage & apply high-contrast class to document root
   useEffect(() => {
     saveStoredSettings(settings);
+    if (settings.highContrast) {
+      document.documentElement.classList.add('high-contrast');
+    } else {
+      document.documentElement.classList.remove('high-contrast');
+    }
   }, [settings]);
 
   // Automated notification check on initial load (simulation of next draw detection)
@@ -70,6 +75,16 @@ export default function App() {
     }
   };
 
+  const handleToggleHighContrast = () => {
+    setSettings(prev => {
+      const nextVal = !prev.highContrast;
+      if (nextVal && prev.soundEnabled) {
+        playNotificationSound();
+      }
+      return { ...prev, highContrast: nextVal };
+    });
+  };
+
   const handleEnablePush = async () => {
     const perm = await requestPushPermission();
     if (perm === 'granted') {
@@ -99,7 +114,9 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-emerald-500 selection:text-white">
+    <div className={`min-h-screen flex flex-col selection:bg-emerald-500 selection:text-white ${
+      settings.highContrast ? 'high-contrast bg-black text-white' : 'bg-slate-950 text-slate-100'
+    }`}>
       {/* App Header */}
       <Header
         activeTab={activeTab}
@@ -110,10 +127,39 @@ export default function App() {
         onToggleSound={handleToggleSound}
         onEnablePush={handleEnablePush}
         pushEnabled={pushEnabled}
+        highContrast={settings.highContrast}
+        onToggleHighContrast={handleToggleHighContrast}
       />
 
       {/* Main App Content Viewport */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
+        {/* High Contrast Accessibility Indicator Bar when active */}
+        {settings.highContrast && (
+          <div className="bg-black border-2 border-amber-400 text-white px-3.5 py-2.5 rounded-xl flex flex-wrap items-center justify-between gap-2 text-xs font-bold shadow-lg">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block animate-pulse" />
+              <span className="text-amber-300">Modo Alto Contraste Ativado:</span>
+              <span className="text-slate-100 font-normal hidden sm:inline">
+                Tabelas, gráficos e números otimizados para máxima legibilidade visual.
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsNotifModalOpen(true)}
+                className="px-2.5 py-1 bg-zinc-900 border border-zinc-500 rounded text-amber-300 hover:text-white text-[11px] cursor-pointer"
+              >
+                Ajustar nas Configurações
+              </button>
+              <button
+                onClick={handleToggleHighContrast}
+                className="px-2.5 py-1 bg-amber-400 text-black rounded font-black text-[11px] cursor-pointer hover:bg-amber-300"
+              >
+                Desativar
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Highlight Card for Generator Shortcut on non-generator tabs */}
         {activeTab !== 'generator' && (
           <div className="bg-gradient-to-r from-emerald-900/60 via-slate-900 to-amber-900/50 border border-amber-400/30 rounded-2xl p-3.5 sm:p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 shadow-lg">

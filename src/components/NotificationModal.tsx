@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Bell, Check, Trash2, X, Volume2, Sparkles, AlertCircle, Clock, Shield } from 'lucide-react';
+import { Bell, Check, Trash2, X, Volume2, Sparkles, AlertCircle, Clock, Shield, Contrast, Eye } from 'lucide-react';
 import { PushNotification } from '../types/lottery';
-import { NotificationSettings, triggerPushNotification } from '../utils/notificationService';
+import { NotificationSettings, triggerPushNotification, playNotificationSound } from '../utils/notificationService';
 
 interface NotificationModalProps {
   isOpen: boolean;
@@ -288,8 +288,75 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                   type="checkbox"
                   checked={settings.soundEnabled}
                   onChange={e => onUpdateSettings({ ...settings, soundEnabled: e.target.checked })}
-                  className="w-4 h-4 rounded text-emerald-500 accent-emerald-500"
+                  className="w-4 h-4 rounded text-emerald-500 accent-emerald-500 cursor-pointer"
                 />
+              </div>
+
+              {/* Visual Accessibility: High Contrast Mode */}
+              <div className="pt-2 border-t border-slate-800 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 text-xs font-bold text-amber-400 uppercase tracking-wider">
+                    <Eye className="w-3.5 h-3.5" />
+                    Acessibilidade Visual
+                  </span>
+                  {settings.highContrast && (
+                    <span className="px-2 py-0.5 rounded bg-amber-400 text-slate-950 font-black text-[10px] uppercase tracking-wide animate-pulse">
+                      Contraste Ativo
+                    </span>
+                  )}
+                </div>
+
+                <div
+                  className={`p-3.5 rounded-xl border transition-all ${
+                    settings.highContrast
+                      ? 'bg-slate-950 border-amber-400 shadow-lg shadow-amber-950/40 ring-1 ring-amber-400/50'
+                      : 'bg-slate-950/80 border-slate-800'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <label
+                        htmlFor="high-contrast-toggle"
+                        className="font-bold text-white text-xs sm:text-sm flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Contrast className="w-4 h-4 text-amber-400 shrink-0" />
+                        <span>Modo Alto Contraste</span>
+                      </label>
+                      <p className="text-[11px] text-slate-300 leading-relaxed">
+                        Aumenta a nitidez e o contraste de tabelas de prêmios, gráficos em barras, números de bilhetes e rótulos para facilitar a leitura de pessoas com baixa visão.
+                      </p>
+                    </div>
+
+                    <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5" title="Alternar Modo Alto Contraste">
+                      <input
+                        id="high-contrast-toggle"
+                        type="checkbox"
+                        checked={settings.highContrast}
+                        onChange={e => {
+                          const isChecked = e.target.checked;
+                          onUpdateSettings({ ...settings, highContrast: isChecked });
+                          if (isChecked && settings.soundEnabled) {
+                            playNotificationSound();
+                          }
+                        }}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-400 peer-checked:border-amber-400 border border-slate-700"></div>
+                    </label>
+                  </div>
+
+                  {/* Visual sample when active */}
+                  {settings.highContrast && (
+                    <div className="mt-3 pt-2.5 border-t border-slate-800 grid grid-cols-2 gap-2 text-[11px] font-mono">
+                      <div className="bg-black border-2 border-white p-2 rounded text-center text-white font-bold">
+                        Tabelas: Linhas Nítidas
+                      </div>
+                      <div className="bg-black border-2 border-amber-400 p-2 rounded text-center text-amber-300 font-bold">
+                        Gráficos: Barras Vivas
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}

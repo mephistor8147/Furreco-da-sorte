@@ -1,1 +1,164 @@
 @import "tailwindcss";
+
+/* High Contrast Accessibility Mode Overrides */
+html.high-contrast,
+.high-contrast {
+  color-scheme: dark;
+}
+
+/* Force pitch-black canvas & ultra-crisp readable typography in high contrast mode */
+.high-contrast {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* Card backgrounds and elevated borders */
+.high-contrast .bg-slate-900,
+.high-contrast .bg-slate-900\/90,
+.high-contrast .bg-slate-900\/80,
+.high-contrast .bg-slate-900\/70,
+.high-contrast .bg-slate-900\/60,
+.high-contrast .bg-slate-950,
+.high-contrast .bg-slate-950\/90,
+.high-contrast .bg-slate-950\/80,
+.high-contrast .bg-slate-950\/70,
+.high-contrast .bg-slate-950\/60,
+.high-contrast .bg-slate-950\/50 {
+  background-color: #0a0a0a !important;
+  border-color: #e4e4e7 !important;
+  border-width: 2px !important;
+}
+
+/* Universal border visibility elevation */
+.high-contrast .border-slate-800,
+.high-contrast .border-slate-800\/80,
+.high-contrast .border-slate-800\/60,
+.high-contrast .border-slate-900,
+.high-contrast .border-slate-700,
+.high-contrast .border-slate-700\/60 {
+  border-color: #a1a1aa !important;
+}
+
+/* Boost muted text colors to pure white and high contrast */
+.high-contrast .text-slate-400,
+.high-contrast .text-slate-500,
+.high-contrast .text-slate-600 {
+  color: #f4f4f5 !important;
+  font-weight: 600 !important;
+}
+
+.high-contrast .text-slate-300 {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+/* Tables in High Contrast Mode (WCAG AAA Compliance) */
+.high-contrast table {
+  border-collapse: collapse !important;
+  border: 2px solid #ffffff !important;
+  background-color: #000000 !important;
+  width: 100% !important;
+}
+
+.high-contrast table thead {
+  background-color: #18181b !important;
+}
+
+.high-contrast table th {
+  background-color: #18181b !important;
+  color: #ffee00 !important;
+  font-weight: 800 !important;
+  border: 2px solid #ffffff !important;
+  padding: 0.75rem !important;
+  font-size: 0.85rem !important;
+  letter-spacing: 0.05em !important;
+}
+
+.high-contrast table td {
+  border: 1px solid #71717a !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  padding: 0.75rem 0.65rem !important;
+}
+
+.high-contrast table tr:hover td {
+  background-color: #27272a !important;
+}
+
+.high-contrast table tbody tr:nth-child(even) {
+  background-color: #121214 !important;
+}
+
+/* Mobile Table Alternative Cards */
+.high-contrast .sm\:hidden > div {
+  border: 2px solid #ffffff !important;
+  background-color: #080808 !important;
+}
+
+/* Charts & Statistic Bars in High Contrast Mode */
+.high-contrast .max-w-\[28px\],
+.high-contrast .group .rounded-t-lg {
+  outline: 2px solid #ffffff !important;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Horizontal statistical frequency bars */
+.high-contrast .h-3\.5,
+.high-contrast .h-3,
+.high-contrast .h-4 {
+  background-color: #000000 !important;
+  border: 2px solid #ffffff !important;
+}
+
+.high-contrast .h-3\.5 > div,
+.high-contrast .h-3 > div,
+.high-contrast .h-4 > div {
+  outline: 1px solid #ffffff !important;
+}
+
+/* High Luminance Accents: Yellow, Emerald, Cyan */
+.high-contrast .text-amber-400,
+.high-contrast .text-amber-300 {
+  color: #ffee00 !important;
+  font-weight: 800 !important;
+}
+
+.high-contrast .text-emerald-400,
+.high-contrast .text-emerald-300 {
+  color: #00ff88 !important;
+  font-weight: 800 !important;
+}
+
+.high-contrast .text-cyan-400,
+.high-contrast .text-cyan-300 {
+  color: #00e5ff !important;
+  font-weight: 800 !important;
+}
+
+.high-contrast .text-rose-400,
+.high-contrast .text-rose-500 {
+  color: #ff3366 !important;
+  font-weight: 800 !important;
+}
+
+/* Numbers in tickets and prizes */
+.high-contrast .font-mono {
+  font-weight: 800 !important;
+  letter-spacing: 0.04em !important;
+}
+
+/* Range input sliders in high contrast */
+.high-contrast input[type="range"] {
+  background: #27272a !important;
+  border: 2px solid #ffee00 !important;
+}
+
+/* Buttons in High Contrast Mode */
+.high-contrast button {
+  border-width: 1.5px !important;
+}
+
+.high-contrast .rounded-xl,
+.high-contrast .rounded-2xl {
+  border-width: 2px !important;
+}

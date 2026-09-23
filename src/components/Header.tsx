@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Sparkles, Clock, CheckCircle2, Volume2, VolumeX, Flame, ShieldCheck } from 'lucide-react';
+import { Bell, Sparkles, Clock, CheckCircle2, Volume2, VolumeX, Flame, ShieldCheck, Contrast } from 'lucide-react';
 import { getNextDrawDate } from '../utils/lotteryUtils';
 import { PushNotification } from '../types/lottery';
 
@@ -12,6 +12,8 @@ interface HeaderProps {
   onToggleSound: () => void;
   onEnablePush: () => void;
   pushEnabled: boolean;
+  highContrast?: boolean;
+  onToggleHighContrast?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -23,6 +25,8 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleSound,
   onEnablePush,
   pushEnabled,
+  highContrast,
+  onToggleHighContrast,
 }) => {
   const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number; seconds: number }>({
     hours: 0,
@@ -117,8 +121,23 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Action Zone: Sound & Notification Bell */}
+        {/* Action Zone: Contrast, Sound & Notification Bell */}
         <div className="flex items-center gap-1.5 sm:gap-2">
+          {onToggleHighContrast && (
+            <button
+              onClick={onToggleHighContrast}
+              className={`p-2 sm:p-2.5 rounded-xl transition-colors cursor-pointer min-w-[38px] min-h-[38px] flex items-center justify-center border ${
+                highContrast
+                  ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md ring-2 ring-amber-300'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800 border-slate-700/60'
+              }`}
+              title={highContrast ? 'Alto Contraste Ativado (Clique para desativar)' : 'Ativar Modo Alto Contraste (Acessibilidade)'}
+              aria-label="Alternar modo de alto contraste"
+            >
+              <Contrast className={`w-4 h-4 ${highContrast ? 'text-slate-950 stroke-[2.5]' : 'text-slate-400'}`} />
+            </button>
+          )}
+
           <button
             onClick={onToggleSound}
             className="p-2 sm:p-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors cursor-pointer min-w-[38px] min-h-[38px] flex items-center justify-center"
@@ -130,7 +149,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={onOpenNotifications}
             className="relative p-2 sm:p-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition-colors border border-slate-700/60 cursor-pointer min-w-[38px] min-h-[38px] flex items-center justify-center"
-            title="Central de Notificações"
+            title="Central de Notificações e Configurações"
           >
             <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
             {unreadCount > 0 && (

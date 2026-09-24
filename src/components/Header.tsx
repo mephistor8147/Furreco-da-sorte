@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Sparkles, Clock, CheckCircle2, Volume2, VolumeX, Flame, ShieldCheck, Contrast } from 'lucide-react';
+import { Bell, Sparkles, Clock, CheckCircle2, Volume2, VolumeX, Flame, ShieldCheck, Contrast, HelpCircle } from 'lucide-react';
 import { getNextDrawDate } from '../utils/lotteryUtils';
 import { PushNotification } from '../types/lottery';
 
 interface HeaderProps {
-  activeTab: 'stats' | 'history' | 'generator' | 'weekly' | 'odds' | 'responsible';
-  setActiveTab: (tab: 'stats' | 'history' | 'generator' | 'weekly' | 'odds' | 'responsible') => void;
+  activeTab: 'stats' | 'history' | 'generator' | 'weekly' | 'odds' | 'responsible' | 'milhar';
+  setActiveTab: (tab: 'stats' | 'history' | 'generator' | 'weekly' | 'odds' | 'responsible' | 'milhar') => void;
   notifications: PushNotification[];
   onOpenNotifications: () => void;
   soundEnabled: boolean;
@@ -14,6 +14,7 @@ interface HeaderProps {
   pushEnabled: boolean;
   highContrast?: boolean;
   onToggleHighContrast?: () => void;
+  onOpenTour?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -27,6 +28,7 @@ export const Header: React.FC<HeaderProps> = ({
   pushEnabled,
   highContrast,
   onToggleHighContrast,
+  onOpenTour,
 }) => {
   const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number; seconds: number }>({
     hours: 0,
@@ -121,8 +123,20 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Action Zone: Contrast, Sound & Notification Bell */}
+        {/* Action Zone: Tour, Contrast, Sound & Notification Bell */}
         <div className="flex items-center gap-1.5 sm:gap-2">
+          {onOpenTour && (
+            <button
+              onClick={onOpenTour}
+              className="p-2 sm:px-3 sm:py-2 rounded-xl text-slate-300 hover:text-amber-300 hover:bg-slate-800 transition-all border border-slate-700/70 bg-slate-900/60 cursor-pointer min-h-[38px] flex items-center justify-center gap-1.5 shadow-sm"
+              title="Tour Interativo: Como usar o Furreco"
+              aria-label="Abrir tour guiado do aplicativo"
+            >
+              <HelpCircle className="w-4 h-4 text-amber-400 shrink-0" />
+              <span className="hidden sm:inline text-xs font-bold text-slate-200">Como Usar</span>
+            </button>
+          )}
+
           {onToggleHighContrast && (
             <button
               onClick={onToggleHighContrast}
@@ -186,6 +200,18 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <span className="text-xs sm:text-sm">🔍</span>
             <span>Concursos</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('milhar')}
+            className={`px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer border ${
+              activeTab === 'milhar'
+                ? 'bg-amber-400 text-slate-950 font-black border-amber-400 shadow-md shadow-amber-900/40 ring-1 ring-amber-300'
+                : 'text-amber-300 hover:text-amber-100 hover:bg-slate-800/70 border-amber-400/40 bg-amber-400/10'
+            }`}
+          >
+            <span className="text-xs sm:text-sm">🎯</span>
+            <span>Busca de Milhar</span>
           </button>
 
           <button

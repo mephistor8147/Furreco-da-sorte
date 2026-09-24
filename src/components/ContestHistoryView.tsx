@@ -7,11 +7,13 @@ import { formatTicket, formatCurrency, checkTicketAgainstContest, ANIMAL_GROUPS 
 interface ContestHistoryViewProps {
   contests: LotteryContest[];
   onPlayChime?: () => void;
+  onNavigateToTab?: (tab: 'stats' | 'history' | 'generator' | 'weekly' | 'odds' | 'responsible' | 'milhar') => void;
 }
 
 export const ContestHistoryView: React.FC<ContestHistoryViewProps> = ({
   contests,
   onPlayChime,
+  onNavigateToTab,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'exact' | 'milhar' | 'centena' | 'dezena' | 'final'>('all');
@@ -214,6 +216,31 @@ export const ContestHistoryView: React.FC<ContestHistoryViewProps> = ({
           </div>
         )}
       </div>
+
+      {/* Direct CTA to Milhar Specific Search */}
+      {onNavigateToTab && (
+        <div className="bg-gradient-to-r from-amber-950/60 via-slate-900 to-slate-950 border border-amber-500/30 rounded-xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-md">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-amber-300 font-black text-sm shrink-0">
+              🎯
+            </div>
+            <div>
+              <strong className="text-white block font-bold text-xs sm:text-sm">
+                Quer auditar uma milhar específica com taxa de frequência e probabilidades?
+              </strong>
+              <p className="text-slate-400 text-[11px] leading-relaxed">
+                Consulte quantas vezes qualquer número de 4 algarismos foi sorteado na cabeça ou no 1º ao 5º prêmio.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => onNavigateToTab('milhar')}
+            className="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs transition-all shrink-0 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
+          >
+            Abrir Busca de Milhar
+          </button>
+        </div>
+      )}
 
       {/* Smart Filters Bar */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 sm:p-5 shadow-xl space-y-3 sm:space-y-4">

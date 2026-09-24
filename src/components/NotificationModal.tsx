@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Check, Trash2, X, Volume2, Sparkles, AlertCircle, Clock, Shield, Contrast, Eye } from 'lucide-react';
+import { Bell, Check, Trash2, X, Volume2, Sparkles, AlertCircle, Clock, Shield, Contrast, Eye, Compass } from 'lucide-react';
 import { PushNotification } from '../types/lottery';
 import { NotificationSettings, triggerPushNotification, playNotificationSound } from '../utils/notificationService';
 
@@ -14,6 +14,7 @@ interface NotificationModalProps {
   onUpdateSettings: (settings: NotificationSettings) => void;
   onRequestPush: () => void;
   pushEnabled: boolean;
+  onOpenTour?: () => void;
 }
 
 export const NotificationModal: React.FC<NotificationModalProps> = ({
@@ -27,6 +28,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
   onUpdateSettings,
   onRequestPush,
   pushEnabled,
+  onOpenTour,
 }) => {
   const [activeTab, setActiveTab] = useState<'lista' | 'config'>('lista');
 
@@ -358,6 +360,30 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                   )}
                 </div>
               </div>
+
+              {/* Interactive Tour Section */}
+              {onOpenTour && (
+                <div className="pt-2 border-t border-slate-800 flex items-center justify-between p-3 rounded-xl bg-slate-950 border border-slate-800">
+                  <div>
+                    <span className="font-semibold text-white flex items-center gap-1.5 text-xs">
+                      <Compass className="w-3.5 h-3.5 text-amber-400" />
+                      Tour Interativo do Furreco
+                    </span>
+                    <span className="text-slate-400 text-[11px] block mt-0.5">
+                      Explica como explorar estatísticas e gerar palpites
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      onClose();
+                      onOpenTour();
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition-colors cursor-pointer shrink-0 ml-2 shadow-sm"
+                  >
+                    Abrir Tour
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

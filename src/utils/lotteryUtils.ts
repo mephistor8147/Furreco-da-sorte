@@ -289,3 +289,164 @@ export function checkTicketAgainstContest(rawTicket: string, contest: LotteryCon
     matchedDigits: '',
   };
 }
+
+export interface MilharContestOccurrence {
+  concurso: number;
+  data: string;
+  diaSemana: string;
+  ordem: number; // 1 to 5
+  bilheteCompleto: string; // 5 digits
+  valorPremio: number;
+  animal: AnimalInfo;
+  isFirstPrize: boolean;
+}
+
+export interface PartialMatchOccurrence {
+  concurso: number;
+  data: string;
+  diaSemana: string;
+  ordem: number;
+  bilheteCompleto: string;
+  matchedType: 'centena' | 'dezena';
+  matchedDigits: string;
+  valorPremio: number;
+  animal: AnimalInfo;
+}
+
+export interface MilharAnalysis {
+  milhar: string;
+  centena: string;
+  dezena: string;
+  animal: AnimalInfo;
+  totalHits: number;
+  firstPrizeHits: number;
+  secondaryPrizeHits: number;
+  occurrences: MilharContestOccurrence[];
+  lastSeenContest: number | null;
+  concursosAtraso: number;
+  totalContestsAnalyzed: number;
+  totalPrizesAnalyzed: number;
+  contestFrequencyPercent: number;
+  prizeFrequencyPercent: number;
+  frequencyStatus: 'alta' | 'media' | 'esperada' | 'atrasada' | 'nunca_sorteada';
+  chanceProximoSorteioCabeca: string;
+  chanceProximoSorteioCercada: string;
+  probabilidadeCabecaNum: number;
+  probabilidadeCercadaNum: number;
+  expectedDrawsForHit: number;
+  centenaHits: number;
+  dezenaHits: number;
+  partialOccurrences: PartialMatchOccurrence[];
+}
+
+export function analyzeMilhar(milharInput: string, contests: LotteryContest[]): MilharAnalysis {
+  const cleanMilhar = milharInput.replace(/\D/g, '').padStart(4, '0').slice(-4);
+  const centena = cleanMilhar.slice(-3);
+  const dezena = cleanMilhar.slice(-2);
+  const animal = getAnimalByDezena(dezena);
+
+  const occurrences: MilharContestOccurrence[] = [];
+  const partialOccurrences: PartialMatchOccurrence[] = [];
+  let centenaCount = 0;
+  let dezenaCount = 0;
+
+  contests.forEach(contest => {
+    contest.premios.forEach(premio => {
+      const prizeMilhar = premio.bilhete.slice(-4);
+      const prizeCentena = premio.bilhete.slice(-3);
+      const prizeDezena = premio.bilhete.slice(-2);
+      const prizeAnimal = getAnimalByDezena(prizeDezena);
+
+      if (prizeMilhar === cleanMilhar) {
+        occurrences.push({
+          concurso: contest.concurso,
+          data: contest.data,
+          diaSemana: contest.diaSemana,
+          ordem: premio.ordem,
+          bilheteCompleto: premio.bilhete,
+          valorPremio: premio.valorPremio,
+          animal: prizeAnimal,
+          isFirstPrize: premio.ordem === 1,
+        });
+      } else {
+        if (prizeCentena === centena) {
+          centenaCount++;
+          partialOccurrences.push({
+            concurso: contest.concurso,
+            data: contest.data,
+            diaSemana: contest.diaSemana,
+            ordem: premio.ordem,
+            bilheteCompleto: premio.bilhete,
+            matchedType: 'centena',
+            matchedDigits: centena,
+            valorPremio: premio.valorPremio,
+            animal: prizeAnimal,
+          });
+        } else if (prizeDezena === dezena) {
+          dezenaCount++;
+          if (partialOccurrences.length < 15) {
+            partialOccurrences.push({
+              concurso: contest.concurso,
+              data: contest.data,
+              diaSemana: contest.diaSemana,
+              ordem: premio.ordem,
+              bilheteCompleto: premio.bilhete,
+              matchedType: 'dezena',
+              matchedDigits: dezena,
+              valorPremio: premio.valorPremio,
+              animal: prizeAnimal,
+            });
+          }
+        }
+      }
+    });
+  });
+
+  const totalHits = occurrences.length;
+  const firstPrizeHits = occurrences.filter(o => o.isFirstPrize).length;
+  const secondaryPrizeHits = totalHits - firstPrizeHits;
+  const lastSeenContest = occurrences.length > 0 ? occurrences[0].concurso : null;
+  const latestContestNum = contests.length > 0 ? contests[0].concurso : 5945;
+  const concursosAtraso = lastSeenContest ? (latestContestNum - lastSeenContest) : contests.length;
+
+  const totalContestsAnalyzed = contests.length;
+  const totalPrizesAnalyzed = contests.length * 5;
+  const contestFrequencyPercent = totalContestsAnalyzed > 0 ? (totalHits / totalContestsAnalyzed) * 100 : 0;
+  const prizeFrequencyPercent = totalPrizesAnalyzed > 0 ? (totalHits / totalPrizesAnalyzed) * 100 : 0;
+
+  let frequencyStatus: MilharAnalysis['frequencyStatus'] = 'nunca_sorteada';
+  if (totalHits >= 2) {
+    frequencyStatus = 'alta';
+  } else if (totalHits === 1) {
+    frequencyStatus = firstPrizeHits > 0 ? 'alta' : 'esperada';
+  } else {
+    frequencyStatus = 'nunca_sorteada';
+  }
+
+  return {
+    milhar: cleanMilhar,
+    centena,
+    dezena,
+    animal,
+    totalHits,
+    firstPrizeHits,
+    secondaryPrizeHits,
+    occurrences,
+    lastSeenContest,
+    concursosAtraso,
+    totalContestsAnalyzed,
+    totalPrizesAnalyzed,
+    contestFrequencyPercent,
+    prizeFrequencyPercent,
+    frequencyStatus,
+    chanceProximoSorteioCabeca: '1 em 10.000 (0,0100%)',
+    chanceProximoSorteioCercada: '1 em 2.000 (0,0500%)',
+    probabilidadeCabecaNum: 0.0001,
+    probabilidadeCercadaNum: 0.0005,
+    expectedDrawsForHit: 2000,
+    centenaHits: centenaCount,
+    dezenaHits: dezenaCount,
+    partialOccurrences,
+  };
+}
+

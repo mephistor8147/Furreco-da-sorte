@@ -18,17 +18,49 @@ import {
   NotificationSettings,
 } from './utils/notificationService';
 import { PushNotification } from './types/lottery';
-import { Sparkles, BarChart3, Search, Calendar, Trophy, ShieldCheck } from 'lucide-react';
+import { Sparkles, BarChart3, Search, Calendar, Trophy, ShieldCheck, Compass } from 'lucide-react';
 import { ResponsibleGamingCard } from './components/ResponsibleGamingCard';
+import { OnboardingTourModal } from './components/OnboardingTourModal';
+import { MilharLookupView } from './components/MilharLookupView';
+import { useLiveLotteryContests } from './services/lotteryLiveService';
+import { CaixaLiveSyncBanner } from './components/CaixaLiveSyncBanner';
+
+const ONBOARDING_KEY = 'furreco_onboarding_completed_v1';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'stats' | 'history' | 'generator' | 'weekly' | 'odds' | 'responsible'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'history' | 'generator' | 'weekly' | 'odds' | 'responsible' | 'milhar'>('stats');
   const [notifications, setNotifications] = useState<PushNotification[]>(getStoredNotifications());
   const [settings, setSettings] = useState<NotificationSettings>(getStoredSettings());
   const [isNotifModalOpen, setIsNotifModalOpen] = useState(false);
+  const [isTourOpen, setIsTourOpen] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(
     typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted'
   );
+
+  // Live Caixa Econômica Federal lottery results state
+  const {
+    contests,
+    isLive,
+    isSyncing,
+    lastSyncTime,
+    syncError,
+    syncNow,
+  } = useLiveLotteryContests();
+
+  // Auto-launch onboarding tour for new visitors
+  useEffect(() => {
+    try {
+      const hasCompletedTour = localStorage.getItem(ONBOARDING_KEY);
+      if (!hasCompletedTour) {
+        const timer = setTimeout(() => {
+          setIsTourOpen(true);
+        }, 700);
+        return () => clearTimeout(timer);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   // Sync notifications to storage
   useEffect(() => {
@@ -113,6 +145,22 @@ export default function App() {
     setNotifications(prev => [notif, ...prev]);
   };
 
+  const handleCloseTour = () => {
+    setIsTourOpen(false);
+    try {
+      localStorage.setItem(ONBOARDING_KEY, 'true');
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleOpenTour = () => {
+    setIsTourOpen(true);
+    if (settings.soundEnabled) {
+      playNotificationSound();
+    }
+  };
+
   return (
     <div className={`min-h-screen flex flex-col selection:bg-emerald-500 selection:text-white ${
       settings.highContrast ? 'high-contrast bg-black text-white' : 'bg-slate-950 text-slate-100'
@@ -129,6 +177,7 @@ export default function App() {
         pushEnabled={pushEnabled}
         highContrast={settings.highContrast}
         onToggleHighContrast={handleToggleHighContrast}
+        onOpenTour={handleOpenTour}
       />
 
       {/* Main App Content Viewport */}
@@ -160,8 +209,22 @@ export default function App() {
           </div>
         )}
 
+        {/* Live Caixa Econômica Federal Real-Time Sync Banner */}
+        <CaixaLiveSyncBanner
+          isLive={isLive}
+          isSyncing={isSyncing}
+          lastSyncTime={lastSyncTime}
+          syncError={syncError}
+          latestContest={contests[0]}
+          onSync={() => {
+            if (settings.soundEnabled) playNotificationSound();
+            syncNow(true);
+          }}
+          highContrast={settings.highContrast}
+        />
+
         {/* Highlight Card for Generator Shortcut on non-generator tabs */}
-        {activeTab !== 'generator' && (
+        {activeTab !== 'generator' && activeTab !== 'milhar' && (
           <div className="bg-gradient-to-r from-emerald-900/60 via-slate-900 to-amber-900/50 border border-amber-400/30 rounded-2xl p-3.5 sm:p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 shadow-lg">
             <div className="flex items-center gap-2.5 sm:gap-3">
               <div className="w-10 h-10 rounded-xl bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-amber-300 text-xl shrink-0">
@@ -190,22 +253,33 @@ export default function App() {
         {/* Tab 1: Stats & Charts */}
         {activeTab === 'stats' && (
           <StatsDashboard
-            contests={LOTTERY_CONTESTS}
+            contests={contests}
           />
         )}
 
         {/* Tab 2: Contest History & Filters */}
         {activeTab === 'history' && (
           <ContestHistoryView
-            contests={LOTTERY_CONTESTS}
+            contests={contests}
             onPlayChime={() => settings.soundEnabled && playNotificationSound()}
+            onNavigateToTab={setActiveTab}
+          />
+        )}
+
+        {/* Tab 2.5: Milhar Lookup & Frequency Inspector */}
+        {activeTab === 'milhar' && (
+          <MilharLookupView
+            contests={contests}
+            onPlayChime={() => settings.soundEnabled && playNotificationSound()}
+            onNavigateToTab={setActiveTab}
+            highContrast={settings.highContrast}
           />
         )}
 
         {/* Tab 3: Smart Generator */}
         {activeTab === 'generator' && (
           <SmartGeneratorCard
-            contests={LOTTERY_CONTESTS}
+            contests={contests}
             soundEnabled={settings.soundEnabled}
             onPlayChime={() => settings.soundEnabled && playNotificationSound()}
           />
@@ -214,7 +288,7 @@ export default function App() {
         {/* Tab 4: Weekly Report */}
         {activeTab === 'weekly' && (
           <WeeklyReportView
-            contests={LOTTERY_CONTESTS}
+            contests={contests}
           />
         )}
 
@@ -226,7 +300,7 @@ export default function App() {
         {/* Tab 6: Responsible Gaming & Bicho Tips dedicated view */}
         {activeTab === 'responsible' && (
           <ResponsibleGamingCard
-            contests={LOTTERY_CONTESTS}
+            contests={contests}
             onPlayChime={() => settings.soundEnabled && playNotificationSound()}
           />
         )}
@@ -235,7 +309,7 @@ export default function App() {
         {activeTab !== 'responsible' && (
           <div className="pt-2">
             <ResponsibleGamingCard
-              contests={LOTTERY_CONTESTS}
+              contests={contests}
               onPlayChime={() => settings.soundEnabled && playNotificationSound()}
             />
           </div>
@@ -252,6 +326,15 @@ export default function App() {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-slate-400">
+            <button
+              onClick={handleOpenTour}
+              className="text-amber-400 hover:text-amber-300 font-semibold transition-colors cursor-pointer flex items-center gap-1"
+              title="Rever o tour explicativo do Furreco"
+            >
+              <Compass className="w-3.5 h-3.5" />
+              Como Usar (Tour Guiado)
+            </button>
+            <span>·</span>
             <span>Sorteios às Quartas e Sábados às 19h</span>
             <span>·</span>
             <span>Jogo Responsável (+18)</span>
@@ -271,6 +354,16 @@ export default function App() {
         onUpdateSettings={setSettings}
         onRequestPush={handleEnablePush}
         pushEnabled={pushEnabled}
+        onOpenTour={handleOpenTour}
+      />
+
+      {/* Interactive Onboarding Tour Modal */}
+      <OnboardingTourModal
+        isOpen={isTourOpen}
+        onClose={handleCloseTour}
+        onNavigateToTab={setActiveTab}
+        onPlayChime={() => settings.soundEnabled && playNotificationSound()}
+        highContrast={settings.highContrast}
       />
     </div>
   );

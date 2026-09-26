@@ -118,7 +118,7 @@ export const LOTERIA_FEDERAL_ODDS = [
 ];
 
 // Helper to calculate next draw timestamp (Wednesdays and Saturdays at 19:00 BRT)
-export function getNextDrawDate(): {
+export function getNextDrawDate(latestContest?: LotteryContest): {
   date: Date;
   formatted: string;
   diaSemana: string;
@@ -151,12 +151,13 @@ export function getNextDrawDate(): {
 
   const diaSemana = target.getDay() === 3 ? 'Quarta-feira' : 'Sábado';
   const formatted = `${target.toLocaleDateString('pt-BR')} às 19:00h`;
+  const concursoEstimado = latestContest && latestContest.concurso ? latestContest.concurso + 1 : 6104;
 
   return {
     date: target,
     formatted,
     diaSemana,
-    concursoEstimado: 5946,
+    concursoEstimado,
     premioEstimado: 'R$ 500.000,00',
   };
 }

@@ -18,6 +18,9 @@ import {
   TrendingDown,
   RefreshCw,
   HeartHandshake,
+  Layers,
+  Award,
+  Zap,
 } from 'lucide-react';
 import { LotteryContest } from '../types/lottery';
 import { computeBichoStatistics, BichoBetSuggestion } from '../utils/bichoStatsUtils';
@@ -167,6 +170,45 @@ Lembre-se: Jogue com responsabilidade (+18). Diversão sem exageros!`;
     handleCopyText(text, `full-${sug.id}`);
   };
 
+  const handleCopyFullTrio = () => {
+    const { threePicks, trioCombinations, totalContestsAnalyzed } = bichoStats;
+    const [p1, p2, p3] = threePicks;
+    const text = `🍀 FURRECO DA SORTE · 3 PEÇAS ESTATÍSTICAS DA FEDERAL 🍀
+📊 Analisados ${totalContestsAnalyzed} concursos oficiais da Caixa Econômica Federal
+
+🔥 PEÇA 1 (EM ALTA): ${p1.animal.emoji} ${p1.animal.nome} (Grupo ${String(p1.animal.grupo).padStart(2, '0')})
+• Milhar: ${p1.milhar}
+• Centena: ${p1.centena}
+• Dezena: ${p1.dezena}
+• Duque: ${p1.duqueSugerido.join(' + ')}
+• Terno: ${p1.ternoSugerido.join(' - ')}
+
+⏳ PEÇA 2 (ATRASADO): ${p2.animal.emoji} ${p2.animal.nome} (Grupo ${String(p2.animal.grupo).padStart(2, '0')})
+• Milhar: ${p2.milhar}
+• Centena: ${p2.centena}
+• Dezena: ${p2.dezena}
+• Duque: ${p2.duqueSugerido.join(' + ')}
+• Terno: ${p2.ternoSugerido.join(' - ')}
+
+⚖️ PEÇA 3 (TENDÊNCIA): ${p3.animal.emoji} ${p3.animal.nome} (Grupo ${String(p3.animal.grupo).padStart(2, '0')})
+• Milhar: ${p3.milhar}
+• Centena: ${p3.centena}
+• Dezena: ${p3.dezena}
+• Duque: ${p3.duqueSugerido.join(' + ')}
+• Terno: ${p3.ternoSugerido.join(' - ')}
+
+⭐ SUPER COMBINAÇÕES DO TRIO:
+🎯 Terno de Dezenas Supremo: ${trioCombinations.ternoDezenas.join(' - ')} (~3.000x)
+🎯 Duques de Dezenas Cruzados (~300x):
+   1) ${trioCombinations.duquesDezenas[0].dezenas.join(' + ')} (${trioCombinations.duquesDezenas[0].label})
+   2) ${trioCombinations.duquesDezenas[1].dezenas.join(' + ')} (${trioCombinations.duquesDezenas[1].label})
+   3) ${trioCombinations.duquesDezenas[2].dezenas.join(' + ')} (${trioCombinations.duquesDezenas[2].label})
+🎯 Terno de Grupos: Gr. ${String(trioCombinations.ternoGrupos[0]).padStart(2, '0')} + Gr. ${String(trioCombinations.ternoGrupos[1]).padStart(2, '0')} + Gr. ${String(trioCombinations.ternoGrupos[2]).padStart(2, '0')}
+
+⚠️ Jogo Responsável (+18): Lazer e diversão com frações mínimas (R$ 0,50 a R$ 2,00). Nunca arrisque seu orçamento!`;
+    handleCopyText(text, 'full-trio');
+  };
+
   // Minimized floating banner view
   if (isMinimized) {
     return (
@@ -284,7 +326,7 @@ Lembre-se: Jogue com responsabilidade (+18). Diversão sem exageros!`;
             }`}
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>Palpites para Bancas (Milhar/Centena/Dezena)</span>
+            <span>3 Peças de Bichos (Milhar, Centena, Duque & Terno)</span>
           </button>
 
           <button
@@ -344,208 +386,368 @@ Lembre-se: Jogue com responsabilidade (+18). Diversão sem exageros!`;
               </div>
             </div>
 
-            {/* Suggestions Selector Chips */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs font-semibold text-slate-300">
-                <span>Selecione a Estratégia do Palpite:</span>
-                <span className="text-[11px] text-slate-400">
-                  {bichoStats.totalContestsAnalyzed} concursos analisados
-                </span>
+            {/* Top Bar for 3 Pieces */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-950/70 p-3.5 sm:p-4 rounded-xl border border-slate-800">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-400/10 text-amber-300 border border-amber-400/20">
+                    <Sparkles className="w-3 h-3 text-amber-400" />
+                    3 Peças de Bichos Recomendadas
+                  </span>
+                  <span className="text-[11px] text-slate-400">
+                    {bichoStats.totalContestsAnalyzed} concursos analisados
+                  </span>
+                </div>
+                <h3 className="text-sm sm:text-base font-bold text-white">
+                  Palpites de Ouro Baseados nas Estatísticas Oficiais da Federal
+                </h3>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {bichoStats.suggestions.map((sug, idx) => (
-                  <button
-                    key={sug.id}
-                    onClick={() => setSelectedSuggestionIndex(idx)}
-                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-                      selectedSuggestionIndex === idx
-                        ? 'bg-emerald-950/60 border-emerald-500 text-white shadow-md shadow-emerald-950'
-                        : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-base" role="img" aria-label={sug.animal.nome}>
-                        {sug.animal.emoji}
-                      </span>
-                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-900 border border-slate-800 text-amber-400">
-                        Gr. {String(sug.animal.grupo).padStart(2, '0')}
-                      </span>
-                    </div>
-                    <span className="text-xs font-bold block text-white truncate">
-                      {sug.animal.nome}
-                    </span>
-                    <span className="text-[10px] text-slate-400 block truncate mt-0.5">
-                      {sug.tipo === 'quente' ? '🔥 Em Alta' : sug.tipo === 'atrasado' ? '⏳ Atrasado' : '⚖️ Equilíbrio'}
-                    </span>
-                  </button>
-                ))}
-              </div>
+              <button
+                onClick={handleCopyFullTrio}
+                className="py-2 px-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-slate-950 font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/50 cursor-pointer shrink-0"
+              >
+                {copiedKey === 'full-trio' ? (
+                  <Check className="w-4 h-4 text-slate-950" />
+                ) : (
+                  <Copy className="w-4 h-4 text-slate-950" />
+                )}
+                <span>
+                  {copiedKey === 'full-trio' ? 'Copiado para o WhatsApp!' : 'Copiar Jogo dos 3 Bichos'}
+                </span>
+              </button>
             </div>
 
-            {/* Active Suggestion Details Box */}
-            {currentSuggestion && (
-              <div className="bg-slate-950/90 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3.5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-emerald-950/80 border border-emerald-500/40 flex items-center justify-center text-2xl shadow-lg">
-                      {currentSuggestion.animal.emoji}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 text-xs">
-                        <span className="font-mono text-emerald-400 font-bold">
-                          Grupo {String(currentSuggestion.animal.grupo).padStart(2, '0')}
+            {/* 3 Bicho Pieces Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {bichoStats.threePicks.map((sug, idx) => {
+                const isHot = sug.tipo === 'quente';
+                const isDelayed = sug.tipo === 'atrasado';
+
+                const borderClass = isHot
+                  ? 'border-emerald-500/50 shadow-emerald-950/30'
+                  : isDelayed
+                  ? 'border-amber-500/50 shadow-amber-950/30'
+                  : 'border-cyan-500/50 shadow-cyan-950/30';
+
+                const badgeBg = isHot
+                  ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40'
+                  : isDelayed
+                  ? 'bg-amber-950/80 text-amber-300 border-amber-500/40'
+                  : 'bg-cyan-950/80 text-cyan-300 border-cyan-500/40';
+
+                const badgeText = isHot
+                  ? '🔥 Peça 1 · Bicho em Alta'
+                  : isDelayed
+                  ? '⏳ Peça 2 · Bicho Atrasado'
+                  : '⚖️ Peça 3 · Bicho Tendência';
+
+                return (
+                  <div
+                    key={sug.id}
+                    className={`bg-slate-950/90 border rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-4 shadow-xl transition-all ${borderClass}`}
+                  >
+                    <div className="space-y-3.5">
+                      {/* Card Header: Strategy Badge + Group */}
+                      <div className="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
+                        <span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border ${badgeBg}`}>
+                          {badgeText}
                         </span>
-                        <span className="text-slate-600">·</span>
-                        <span className="text-slate-400">
-                          Dezenas: {currentSuggestion.animal.dezenas.join(', ')}
+                        <span className="font-mono text-xs font-bold text-slate-300 px-2 py-0.5 rounded bg-slate-900 border border-slate-800">
+                          Gr. {String(sug.animal.grupo).padStart(2, '0')}
                         </span>
                       </div>
-                      <h3 className="text-base sm:text-lg font-black text-white">
-                        {currentSuggestion.titulo}
-                      </h3>
-                    </div>
-                  </div>
 
-                  <button
-                    onClick={() => handleCopyFullBet(currentSuggestion)}
-                    className="self-start sm:self-center py-2 px-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold text-xs transition-all flex items-center gap-1.5 shadow-md shadow-emerald-900/30 cursor-pointer shrink-0"
-                  >
-                    {copiedKey === `full-${currentSuggestion.id}` ? (
-                      <Check className="w-4 h-4 text-slate-950" />
-                    ) : (
-                      <Copy className="w-4 h-4 text-slate-950" />
-                    )}
-                    <span>
-                      {copiedKey === `full-${currentSuggestion.id}` ? 'Copiado para o WhatsApp!' : 'Copiar Palpite Completo'}
-                    </span>
-                  </button>
-                </div>
-
-                <p className="text-xs text-slate-300 bg-slate-900/80 p-3 rounded-xl border border-slate-800/80 leading-relaxed">
-                  <strong className="text-amber-400">Fundamento Estatístico:</strong> {currentSuggestion.motivoEstatistico}
-                </p>
-
-                {/* Core Suggested Numbers: Milhar, Centena, Dezena */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {/* Milhar */}
-                  <div className="bg-slate-900/90 border border-amber-500/30 rounded-xl p-3.5 relative overflow-hidden group">
-                    <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
-                      <span className="font-semibold text-amber-300">Milhar Sugerida (4 dígitos)</span>
-                      <button
-                        onClick={() => handleCopyText(currentSuggestion.milhar, 'milhar')}
-                        className="text-slate-400 hover:text-white p-1 rounded transition-colors cursor-pointer"
-                        title="Copiar milhar"
-                      >
-                        {copiedKey === 'milhar' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                      </button>
-                    </div>
-                    <div className="font-mono text-2xl sm:text-3xl font-black text-amber-400 tracking-wider">
-                      {currentSuggestion.milhar}
-                    </div>
-                    <div className="text-[10px] text-slate-400 mt-1 flex items-center justify-between">
-                      <span>Cota na Cabeça: ~4.000x</span>
-                      <span>No 1º ao 5º: ~800x</span>
-                    </div>
-                  </div>
-
-                  {/* Centena */}
-                  <div className="bg-slate-900/90 border border-emerald-500/30 rounded-xl p-3.5 relative overflow-hidden group">
-                    <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
-                      <span className="font-semibold text-emerald-300">Centena Quente (3 dígitos)</span>
-                      <button
-                        onClick={() => handleCopyText(currentSuggestion.centena, 'centena')}
-                        className="text-slate-400 hover:text-white p-1 rounded transition-colors cursor-pointer"
-                        title="Copiar centena"
-                      >
-                        {copiedKey === 'centena' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                      </button>
-                    </div>
-                    <div className="font-mono text-2xl sm:text-3xl font-black text-emerald-400 tracking-wider">
-                      {currentSuggestion.centena}
-                    </div>
-                    <div className="text-[10px] text-slate-400 mt-1 flex items-center justify-between">
-                      <span>Cota na Cabeça: ~600x</span>
-                      <span>No 1º ao 5º: ~120x</span>
-                    </div>
-                  </div>
-
-                  {/* Dezena */}
-                  <div className="bg-slate-900/90 border border-cyan-500/30 rounded-xl p-3.5 relative overflow-hidden group">
-                    <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
-                      <span className="font-semibold text-cyan-300">Dezena Foco (2 dígitos)</span>
-                      <button
-                        onClick={() => handleCopyText(currentSuggestion.dezena, 'dezena')}
-                        className="text-slate-400 hover:text-white p-1 rounded transition-colors cursor-pointer"
-                        title="Copiar dezena"
-                      >
-                        {copiedKey === 'dezena' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                      </button>
-                    </div>
-                    <div className="font-mono text-2xl sm:text-3xl font-black text-cyan-400 tracking-wider">
-                      {currentSuggestion.dezena}
-                    </div>
-                    <div className="text-[10px] text-slate-400 mt-1 flex items-center justify-between">
-                      <span>Cota na Cabeça: ~60x</span>
-                      <span>No 1º ao 5º: ~12x</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Combinações Recomendadas: Duque e Terno de Dezenas */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                  <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-3 space-y-1">
-                    <span className="text-[11px] font-semibold text-slate-400 block">
-                      Duque de Dezenas Recomendado:
-                    </span>
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono font-bold text-sm text-white">
-                        {currentSuggestion.duqueSugerido.join(' + ')}
-                      </span>
-                      <span className="text-[10px] text-emerald-400 font-mono">
-                        Paga ~300x (Aposte R$ 0,50 a R$ 1,00)
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-3 space-y-1">
-                    <span className="text-[11px] font-semibold text-slate-400 block">
-                      Terno de Dezenas Recomendado:
-                    </span>
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono font-bold text-sm text-white">
-                        {currentSuggestion.ternoSugerido.join(' + ')}
-                      </span>
-                      <span className="text-[10px] text-amber-400 font-mono">
-                        Paga ~3.000x (Aposta mínima simbólica)
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Modalidades Clássicas e Doses Conscientes */}
-                <div className="space-y-2 pt-2">
-                  <span className="text-xs font-semibold text-slate-300 block">
-                    Como Jogar com Segurança nesta Opção:
-                  </span>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                    {currentSuggestion.modalidadesRecomendadas.map((mod, mIdx) => (
-                      <div
-                        key={mIdx}
-                        className="bg-slate-900/60 border border-slate-800 rounded-xl p-3 space-y-1 text-xs"
-                      >
-                        <span className="font-bold text-emerald-400 block">{mod.nome}</span>
-                        <p className="text-[11px] text-slate-400 leading-snug">{mod.explicacao}</p>
-                        <div className="pt-1 border-t border-slate-800/60 flex items-center justify-between text-[10px]">
-                          <span className="text-slate-500 font-mono">{mod.multiplicador}</span>
-                          <span className="text-amber-300 font-semibold">{mod.valorConscienteSugerido}</span>
+                      {/* Animal Presentation */}
+                      <div className="flex items-center gap-3">
+                        <div className="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-3xl shadow-inner shrink-0">
+                          {sug.animal.emoji}
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="text-lg font-black text-white leading-tight truncate">
+                            {sug.animal.nome}
+                          </h4>
+                          <span className="text-[11px] text-slate-400 block mt-0.5">
+                            Dezenas: <strong className="text-slate-200">{sug.animal.dezenas.join(', ')}</strong>
+                          </span>
                         </div>
                       </div>
-                    ))}
+
+                      {/* Statistical Motive */}
+                      <p className="text-[11px] text-slate-300 bg-slate-900/80 p-2.5 rounded-xl border border-slate-800/80 leading-relaxed">
+                        <strong className="text-amber-300">Estatística: </strong>
+                        {sug.motivoEstatistico}
+                      </p>
+
+                      {/* Numbers Grid: Milhar, Centena, Dezena */}
+                      <div className="space-y-2">
+                        {/* Milhar (4 dígitos) */}
+                        <div className="bg-slate-900/90 border border-amber-500/30 rounded-xl p-3 relative overflow-hidden group">
+                          <div className="flex items-center justify-between text-[11px] text-slate-400 mb-0.5">
+                            <span className="font-semibold text-amber-300">Milhar (4 dígitos)</span>
+                            <button
+                              onClick={() => handleCopyText(sug.milhar, `milhar-${sug.id}`)}
+                              className="text-slate-400 hover:text-white p-1 rounded transition-colors cursor-pointer"
+                              title="Copiar milhar"
+                            >
+                              {copiedKey === `milhar-${sug.id}` ? (
+                                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                              ) : (
+                                <Copy className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                          </div>
+                          <div className="font-mono text-2xl font-black text-amber-400 tracking-wider">
+                            {sug.milhar}
+                          </div>
+                          <div className="text-[9px] text-slate-400 mt-0.5 flex items-center justify-between">
+                            <span>Cabeça: ~4.000x</span>
+                            <span>1º ao 5º: ~800x</span>
+                          </div>
+                        </div>
+
+                        {/* Centena (3 dígitos) */}
+                        <div className="bg-slate-900/90 border border-emerald-500/30 rounded-xl p-3 relative overflow-hidden group">
+                          <div className="flex items-center justify-between text-[11px] text-slate-400 mb-0.5">
+                            <span className="font-semibold text-emerald-300">Centena (3 dígitos)</span>
+                            <button
+                              onClick={() => handleCopyText(sug.centena, `centena-${sug.id}`)}
+                              className="text-slate-400 hover:text-white p-1 rounded transition-colors cursor-pointer"
+                              title="Copiar centena"
+                            >
+                              {copiedKey === `centena-${sug.id}` ? (
+                                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                              ) : (
+                                <Copy className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                          </div>
+                          <div className="font-mono text-2xl font-black text-emerald-400 tracking-wider">
+                            {sug.centena}
+                          </div>
+                          <div className="text-[9px] text-slate-400 mt-0.5 flex items-center justify-between">
+                            <span>Cabeça: ~600x</span>
+                            <span>1º ao 5º: ~120x</span>
+                          </div>
+                        </div>
+
+                        {/* Dezena (2 dígitos) */}
+                        <div className="bg-slate-900/90 border border-cyan-500/30 rounded-xl p-3 relative overflow-hidden group">
+                          <div className="flex items-center justify-between text-[11px] text-slate-400 mb-0.5">
+                            <span className="font-semibold text-cyan-300">Dezena Foco (2 dígitos)</span>
+                            <button
+                              onClick={() => handleCopyText(sug.dezena, `dezena-${sug.id}`)}
+                              className="text-slate-400 hover:text-white p-1 rounded transition-colors cursor-pointer"
+                              title="Copiar dezena"
+                            >
+                              {copiedKey === `dezena-${sug.id}` ? (
+                                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                              ) : (
+                                <Copy className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                          </div>
+                          <div className="font-mono text-xl font-black text-cyan-400 tracking-wider">
+                            {sug.dezena}
+                          </div>
+                          <div className="text-[9px] text-slate-400 mt-0.5 flex items-center justify-between">
+                            <span>Cabeça: ~60x</span>
+                            <span>1º ao 5º: ~12x</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Duque & Terno for this piece */}
+                      <div className="space-y-2 pt-1">
+                        {/* Duque de Dezenas */}
+                        <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-2.5">
+                          <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
+                            <span className="font-semibold text-slate-300">Duque de Dezenas</span>
+                            <span className="text-emerald-400 font-mono">Paga ~300x</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="font-mono font-bold text-sm text-white">
+                              {sug.duqueSugerido.join(' + ')}
+                            </span>
+                            <button
+                              onClick={() => handleCopyText(sug.duqueSugerido.join(' + '), `duque-${sug.id}`)}
+                              className="text-slate-400 hover:text-white p-1 rounded transition-colors cursor-pointer"
+                              title="Copiar duque"
+                            >
+                              {copiedKey === `duque-${sug.id}` ? (
+                                <Check className="w-3 h-3 text-emerald-400" />
+                              ) : (
+                                <Copy className="w-3 h-3" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Terno de Dezenas */}
+                        <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-2.5">
+                          <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
+                            <span className="font-semibold text-slate-300">Terno de Dezenas</span>
+                            <span className="text-amber-400 font-mono">Paga ~3.000x</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="font-mono font-bold text-sm text-white">
+                              {sug.ternoSugerido.join(' + ')}
+                            </span>
+                            <button
+                              onClick={() => handleCopyText(sug.ternoSugerido.join(' + '), `terno-${sug.id}`)}
+                              className="text-slate-400 hover:text-white p-1 rounded transition-colors cursor-pointer"
+                              title="Copiar terno"
+                            >
+                              {copiedKey === `terno-${sug.id}` ? (
+                                <Check className="w-3 h-3 text-emerald-400" />
+                              ) : (
+                                <Copy className="w-3 h-3" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Copy single piece button */}
+                    <button
+                      onClick={() => handleCopyFullBet(sug)}
+                      className="w-full mt-3 py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-semibold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      {copiedKey === `full-${sug.id}` ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5 text-slate-400" />
+                      )}
+                      <span>
+                        {copiedKey === `full-${sug.id}` ? 'Copiado!' : `Copiar Palpite de ${sug.animal.nome}`}
+                      </span>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* SUPER COMBINAÇÕES DO TRIO (As 3 Peças Juntas) */}
+            <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-2 border-amber-500/40 rounded-2xl p-4 sm:p-6 space-y-5 shadow-2xl relative overflow-hidden">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500/30 to-emerald-500/30 border border-amber-500/50 flex items-center justify-center text-amber-300 shrink-0 shadow-lg">
+                    <Award className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold">
+                      <Zap className="w-3 h-3" />
+                      <span>Estratégia Combinada de Alta Cotação</span>
+                    </div>
+                    <h3 className="text-base sm:text-lg font-black text-white">
+                      Super Combinações dos 3 Bichos Recomendados
+                    </h3>
                   </div>
                 </div>
+
+                <button
+                  onClick={handleCopyFullTrio}
+                  className="py-2.5 px-4 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs transition-all flex items-center justify-center gap-2 shadow-md shadow-amber-950/60 cursor-pointer shrink-0"
+                >
+                  {copiedKey === 'full-trio' ? (
+                    <Check className="w-4 h-4 text-slate-950" />
+                  ) : (
+                    <Copy className="w-4 h-4 text-slate-950" />
+                  )}
+                  <span>{copiedKey === 'full-trio' ? 'Copiado!' : 'Copiar Jogo Completo dos 3'}</span>
+                </button>
               </div>
-            )}
+
+              {/* Terno de Dezenas Supremo */}
+              <div className="bg-slate-900/90 border border-amber-500/40 rounded-xl p-4 sm:p-5 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                    <span className="text-xs sm:text-sm font-bold text-amber-300">
+                      Terno de Dezenas Supremo (Melhor Dezena das 3 Peças):
+                    </span>
+                  </div>
+                  <span className="text-xs font-mono font-bold text-amber-400 bg-amber-950/60 border border-amber-500/30 px-2 py-0.5 rounded self-start sm:self-auto">
+                    Cotação Média: ~3.000x
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 py-1">
+                  {bichoStats.trioCombinations.ternoDezenas.map((dez, dIdx) => (
+                    <div
+                      key={dIdx}
+                      className="flex-1 min-w-[70px] bg-slate-950 border border-amber-400/50 rounded-xl p-3 text-center shadow-lg"
+                    >
+                      <span className="text-[10px] text-slate-400 block mb-0.5">
+                        {bichoStats.threePicks[dIdx].animal.emoji} {bichoStats.threePicks[dIdx].animal.nome}
+                      </span>
+                      <span className="font-mono text-2xl sm:text-3xl font-black text-amber-300 tracking-wider">
+                        {dez}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <p className="text-[11px] text-slate-300 leading-relaxed">
+                  💡 <strong>Como Funciona:</strong> Se as 3 dezenas acima saírem em qualquer posição entre o 1º e o 5º prêmio da Federal, você ganha aproximadamente <strong>3.000 vezes</strong> o valor da aposta (ex: R$ 1,00 rende ~R$ 3.000,00). Jogue frações mínimas (R$ 0,50 ou R$ 1,00).
+                </p>
+              </div>
+
+              {/* 3 Duques de Dezenas Cruzados */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs font-semibold text-slate-300">
+                  <span>3 Duques de Dezenas Cruzados (Pares entre as 3 Peças):</span>
+                  <span className="text-emerald-400 font-mono text-[11px]">Pagam ~300x cada</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  {bichoStats.trioCombinations.duquesDezenas.map((dq, dqIdx) => (
+                    <div
+                      key={dqIdx}
+                      className="bg-slate-900/80 border border-slate-800 hover:border-emerald-500/40 rounded-xl p-3 flex items-center justify-between transition-colors"
+                    >
+                      <div className="space-y-0.5">
+                        <span className="text-[10px] text-slate-400 block truncate max-w-[170px]">
+                          {dq.label}
+                        </span>
+                        <span className="font-mono font-black text-lg text-emerald-400 tracking-wider">
+                          {dq.dezenas.join(' + ')}
+                        </span>
+                      </div>
+
+                      <button
+                        onClick={() => handleCopyText(dq.dezenas.join(' + '), `duque-cross-${dqIdx}`)}
+                        className="text-slate-400 hover:text-white p-1.5 rounded transition-colors cursor-pointer"
+                        title="Copiar duque"
+                      >
+                        {copiedKey === `duque-cross-${dqIdx}` ? (
+                          <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Terno de Grupos */}
+              <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-cyan-400 shrink-0" />
+                  <span className="text-slate-300">
+                    Terno de Grupos dos 3 Bichos:
+                  </span>
+                  <span className="font-mono font-bold text-cyan-400">
+                    Gr. {String(bichoStats.trioCombinations.ternoGrupos[0]).padStart(2, '0')} + Gr. {String(bichoStats.trioCombinations.ternoGrupos[1]).padStart(2, '0')} + Gr. {String(bichoStats.trioCombinations.ternoGrupos[2]).padStart(2, '0')}
+                  </span>
+                </div>
+                <span className="text-[11px] text-slate-400">
+                  Cotação média ~130x nos 5 prêmios
+                </span>
+              </div>
+            </div>
 
             {/* Quick Top Hot / Top Delayed Animals Strip */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">

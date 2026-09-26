@@ -5,6 +5,13 @@ import { LOTTERY_CONTESTS as FALLBACK_CONTESTS } from '../data/mockLotteryData';
 const CACHE_STORAGE_KEY = 'furreco_caixa_live_contests_v2';
 const LAST_SYNC_KEY = 'furreco_caixa_last_sync_timestamp';
 
+export interface NextContestLiveInfo {
+  numero: number;
+  dataEstimada: string;
+  diaSemana: string;
+  premioEstimado: string;
+}
+
 export interface LiveLotteryState {
   contests: LotteryContest[];
   isLive: boolean;
@@ -13,6 +20,8 @@ export interface LiveLotteryState {
   lastSyncTime: Date | null;
   syncError: string | null;
   latestConcursoNumber: number;
+  latestContest: LotteryContest | undefined;
+  proximoConcurso: NextContestLiveInfo | null;
   syncNow: (force?: boolean) => Promise<void>;
 }
 
@@ -57,6 +66,7 @@ export function useLiveLotteryContests(): LiveLotteryState {
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(getInitialSyncTime);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [proximoConcurso, setProximoConcurso] = useState<NextContestLiveInfo | null>(null);
 
   const syncNow = useCallback(async (force = true) => {
     setIsSyncing(true);
@@ -76,6 +86,9 @@ export function useLiveLotteryContests(): LiveLotteryState {
       if (data.success && Array.isArray(data.contests) && data.contests.length > 0) {
         setContests(data.contests);
         setIsLive(true);
+        if (data.proximoConcurso) {
+          setProximoConcurso(data.proximoConcurso);
+        }
         const now = new Date();
         setLastSyncTime(now);
 
@@ -105,15 +118,16 @@ export function useLiveLotteryContests(): LiveLotteryState {
   useEffect(() => {
     syncNow(false);
 
-    // Auto-refresh every 3 minutes
+    // Auto-refresh every 60 seconds for true real-time updates
     const interval = setInterval(() => {
       syncNow(false);
-    }, 3 * 60 * 1000);
+    }, 60 * 1000);
 
     return () => clearInterval(interval);
   }, [syncNow]);
 
   const latestConcursoNumber = contests.length > 0 ? contests[0].concurso : 0;
+  const latestContest = contests.length > 0 ? contests[0] : undefined;
 
   return {
     contests,
@@ -123,6 +137,8 @@ export function useLiveLotteryContests(): LiveLotteryState {
     lastSyncTime,
     syncError,
     latestConcursoNumber,
+    latestContest,
+    proximoConcurso,
     syncNow,
   };
 }

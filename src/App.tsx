@@ -44,8 +44,19 @@ export default function App() {
     isSyncing,
     lastSyncTime,
     syncError,
+    latestContest,
+    proximoConcurso,
     syncNow,
   } = useLiveLotteryContests();
+
+  // Update document title in real time with live Caixa draw results
+  useEffect(() => {
+    if (latestContest) {
+      document.title = `🍀 Furreco | Conc. ${latestContest.concurso} [1º ${latestContest.premios[0]?.bilhete || ''}] - Ao Vivo Caixa`;
+    } else {
+      document.title = 'Furreco da Sorte - Estatísticas e Palpites da Loteria Federal';
+    }
+  }, [latestContest]);
 
   // Auto-launch onboarding tour for new visitors
   useEffect(() => {
@@ -178,6 +189,15 @@ export default function App() {
         highContrast={settings.highContrast}
         onToggleHighContrast={handleToggleHighContrast}
         onOpenTour={handleOpenTour}
+        latestContest={latestContest || contests[0]}
+        proximoConcurso={proximoConcurso}
+        isLive={isLive}
+        isSyncing={isSyncing}
+        lastSyncTime={lastSyncTime}
+        onSyncNow={() => {
+          if (settings.soundEnabled) playNotificationSound();
+          syncNow(true);
+        }}
       />
 
       {/* Main App Content Viewport */}

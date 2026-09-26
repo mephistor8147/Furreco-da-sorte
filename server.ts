@@ -122,10 +122,18 @@ function parseCaixaContest(data: any): ParsedContest | null {
 }
 
 // In-memory cache for live Caixa lottery data
+interface NextContestInfo {
+  numero: number;
+  dataEstimada: string;
+  diaSemana: string;
+  premioEstimado: string;
+}
+
 interface ContestCache {
   contests: ParsedContest[];
   lastFetchTime: number;
   latestConcurso: number;
+  proximoConcurso: NextContestInfo | null;
   isUpdating: boolean;
 }
 
@@ -133,6 +141,7 @@ const cache: ContestCache = {
   contests: [],
   lastFetchTime: 0,
   latestConcurso: 0,
+  proximoConcurso: null,
   isUpdating: false,
 };
 
@@ -175,6 +184,30 @@ async function fetchCaixaFederalContests(count = 20, force = false): Promise<Par
 
     const latestNum = parsedLatest.concurso;
     cache.latestConcurso = latestNum;
+
+    // Calculate real-time next draw data dynamically from Caixa apuração
+    const nextConcursoNum = Number(latestData.numeroConcursoProximo) || (parsedLatest.concurso + 1);
+    const [d, m, y] = (parsedLatest.data || '').split('/').map(Number);
+    const lastDate = new Date(y, (m || 1) - 1, d || 1);
+    const nextDate = new Date(lastDate);
+    if (parsedLatest.diaSemana === 'Quarta-feira') {
+      nextDate.setDate(nextDate.getDate() + 3); // next draw is Saturday
+    } else {
+      nextDate.setDate(nextDate.getDate() + 4); // next draw is Wednesday
+    }
+    const nextDiaSemana = nextDate.getDay() === 3 ? 'Quarta-feira' : 'Sábado';
+    const nextDataEstimada = `${String(nextDate.getDate()).padStart(2, '0')}/${String(nextDate.getMonth() + 1).padStart(2, '0')}/${nextDate.getFullYear()}`;
+    const valorEstimado = Number(latestData.valorEstimadoProximoConcurso);
+    const nextPremioEstimado = valorEstimado > 0
+      ? `R$ ${valorEstimado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+      : 'R$ 500.000,00';
+
+    cache.proximoConcurso = {
+      numero: nextConcursoNum,
+      dataEstimada: latestData.dataProximoConcurso || nextDataEstimada,
+      diaSemana: nextDiaSemana,
+      premioEstimado: nextPremioEstimado,
+    };
 
     // 2. Fetch past contests in batches
     const neededNumbers: number[] = [];
@@ -246,6 +279,7 @@ app.get('/api/loterias/federal/latest', async (req: Request, res: Response) => {
         success: true,
         source: 'Caixa Econômica Federal',
         contest: contests[0],
+        proximoConcurso: cache.proximoConcurso,
         timestamp: cache.lastFetchTime,
       });
     } else {
@@ -269,6 +303,7 @@ app.get('/api/loterias/federal/recent', async (req: Request, res: Response) => {
       isRealTime: true,
       lastUpdated: cache.lastFetchTime,
       latestConcurso: cache.latestConcurso,
+      proximoConcurso: cache.proximoConcurso,
       total: contests.length,
       contests,
     });

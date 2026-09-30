@@ -1,3 +1,4 @@
+// furreco da sorte
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Shield,
@@ -106,7 +107,6 @@ export const ResponsibleGamingCard: React.FC<ResponsibleGamingCardProps> = ({
   const [selectedBetUnit, setSelectedBetUnit] = useState<number>(1);
 
   // Bicho suggestions states
-  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   // Self check quiz state
@@ -116,7 +116,6 @@ export const ResponsibleGamingCard: React.FC<ResponsibleGamingCardProps> = ({
   const bichoStats = useMemo(() => computeBichoStatistics(contests), [contests]);
 
   const currentTip = RESPONSIBLE_TIPS[currentTipIndex];
-  const currentSuggestion: BichoBetSuggestion | undefined = bichoStats.suggestions[selectedSuggestionIndex];
 
   // Auto-rotation timer for tips (every 18s)
   useEffect(() => {

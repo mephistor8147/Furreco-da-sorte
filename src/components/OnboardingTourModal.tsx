@@ -1,3 +1,4 @@
+// furreco da sorte
 import React, { useState, useEffect } from 'react';
 import {
   Sparkles,

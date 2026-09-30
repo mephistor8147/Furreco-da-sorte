@@ -1,3 +1,4 @@
+// furreco da sorte
 export interface PrizeDraw {
   ordem: number; // 1, 2, 3, 4, 5
   bilhete: string; // "48291" (5 digits)

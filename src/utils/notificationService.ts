@@ -1,3 +1,4 @@
+// furreco da sorte
 import { PushNotification } from '../types/lottery';
 
 const NOTIFICATIONS_STORAGE_KEY = 'furreco_notificacoes_v1';

@@ -1,3 +1,4 @@
+// furreco da sorte
 import { useState, useEffect, useCallback } from 'react';
 import { LotteryContest } from '../types/lottery';
 import { LOTTERY_CONTESTS as FALLBACK_CONTESTS } from '../data/mockLotteryData';

@@ -1,3 +1,4 @@
+// furreco da sorte
 import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
 import { Search, Filter, CheckCircle, Award, Calendar, Sparkles, X } from 'lucide-react';

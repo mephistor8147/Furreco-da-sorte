@@ -1,3 +1,4 @@
+// furreco da sorte
 import { LotteryContest, AnimalInfo } from '../types/lottery';
 import { ANIMAL_GROUPS, getAnimalByDezena } from './lotteryUtils';
 

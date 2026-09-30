@@ -1,3 +1,4 @@
+// furreco da sorte
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { StatsDashboard } from './components/StatsDashboard';
@@ -6,7 +7,6 @@ import { SmartGeneratorCard } from './components/SmartGeneratorCard';
 import { WeeklyReportView } from './components/WeeklyReportView';
 import { OddsCalculatorView } from './components/OddsCalculatorView';
 import { NotificationModal } from './components/NotificationModal';
-import { LOTTERY_CONTESTS } from './data/mockLotteryData';
 import {
   getStoredNotifications,
   saveStoredNotifications,
@@ -18,7 +18,7 @@ import {
   NotificationSettings,
 } from './utils/notificationService';
 import { PushNotification } from './types/lottery';
-import { Sparkles, BarChart3, Search, Calendar, Trophy, ShieldCheck, Compass } from 'lucide-react';
+import { ShieldCheck, Compass } from 'lucide-react';
 import { ResponsibleGamingCard } from './components/ResponsibleGamingCard';
 import { OnboardingTourModal } from './components/OnboardingTourModal';
 import { MilharLookupView } from './components/MilharLookupView';
@@ -229,45 +229,20 @@ export default function App() {
           </div>
         )}
 
-        {/* Live Caixa Econômica Federal Real-Time Sync Banner */}
-        <CaixaLiveSyncBanner
-          isLive={isLive}
-          isSyncing={isSyncing}
-          lastSyncTime={lastSyncTime}
-          syncError={syncError}
-          latestContest={contests[0]}
-          onSync={() => {
-            if (settings.soundEnabled) playNotificationSound();
-            syncNow(true);
-          }}
-          highContrast={settings.highContrast}
-        />
-
-        {/* Highlight Card for Generator Shortcut on non-generator tabs */}
-        {activeTab !== 'generator' && activeTab !== 'milhar' && (
-          <div className="bg-gradient-to-r from-emerald-900/60 via-slate-900 to-amber-900/50 border border-amber-400/30 rounded-2xl p-3.5 sm:p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 shadow-lg">
-            <div className="flex items-center gap-2.5 sm:gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-amber-300 text-xl shrink-0">
-                🍀
-              </div>
-              <div>
-                <h3 className="font-bold text-white text-xs sm:text-base flex items-center gap-1.5">
-                  Quer um palpite quente para o próximo concurso?
-                </h3>
-                <p className="text-[11px] sm:text-xs text-slate-300 leading-relaxed">
-                  O Gerador do Furreco calcula combinações otimizadas usando a frequência real dos últimos concursos.
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setActiveTab('generator')}
-              className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-400 to-emerald-400 text-slate-950 font-bold text-xs sm:text-sm hover:brightness-110 active:scale-95 transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer shrink-0"
-            >
-              <Sparkles className="w-4 h-4 text-slate-950" />
-              <span>Gerar Palpites Agora</span>
-            </button>
-          </div>
+        {/* Live Caixa Econômica Federal Sync Alert (displayed only on sync warning / contingency) */}
+        {syncError && (
+          <CaixaLiveSyncBanner
+            isLive={isLive}
+            isSyncing={isSyncing}
+            lastSyncTime={lastSyncTime}
+            syncError={syncError}
+            latestContest={contests[0]}
+            onSync={() => {
+              if (settings.soundEnabled) playNotificationSound();
+              syncNow(true);
+            }}
+            highContrast={settings.highContrast}
+          />
         )}
 
         {/* Tab 1: Stats & Charts */}
@@ -325,13 +300,21 @@ export default function App() {
           />
         )}
 
-        {/* Periodic Responsible Gaming & Bicho Tips Card on other tabs */}
+        {/* Subtle, non-duplicated Responsible Gaming link banner on other tabs */}
         {activeTab !== 'responsible' && (
-          <div className="pt-2">
-            <ResponsibleGamingCard
-              contests={contests}
-              onPlayChime={() => settings.soundEnabled && playNotificationSound()}
-            />
+          <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs shadow-md">
+            <div className="flex items-center gap-2.5 text-slate-300">
+              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>
+                <strong className="text-white">Apostas Conscientes (+18):</strong> Conheça as 3 Peças dos Bichos, Milhar, Centena, Duque e Terno estatísticos da Federal.
+              </span>
+            </div>
+            <button
+              onClick={() => setActiveTab('responsible')}
+              className="px-3.5 py-1.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 border border-emerald-500/40 text-xs font-bold transition-all cursor-pointer shrink-0 active:scale-95"
+            >
+              Ver 3 Peças & Jogo Consciente →
+            </button>
           </div>
         )}
       </main>

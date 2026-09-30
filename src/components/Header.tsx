@@ -1,3 +1,4 @@
+// furreco da sorte
 import React, { useState, useEffect } from 'react';
 import { Bell, Sparkles, Clock, CheckCircle2, Volume2, VolumeX, Flame, ShieldCheck, Contrast, HelpCircle, RefreshCw, Radio } from 'lucide-react';
 import { getNextDrawDate } from '../utils/lotteryUtils';

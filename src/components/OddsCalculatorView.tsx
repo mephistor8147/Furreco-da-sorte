@@ -1,3 +1,4 @@
+// furreco da sorte
 import React, { useState } from 'react';
 import { ShieldCheck, Calculator, HelpCircle, Trophy } from 'lucide-react';
 import { LOTERIA_FEDERAL_ODDS } from '../utils/lotteryUtils';

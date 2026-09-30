@@ -1,3 +1,4 @@
+// furreco da sorte
 import React, { useState } from 'react';
 import { RefreshCw, Radio, CheckCircle2, AlertTriangle, Building2, Sparkles } from 'lucide-react';
 import { LotteryContest } from '../types/lottery';

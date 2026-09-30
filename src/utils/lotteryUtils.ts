@@ -1,3 +1,4 @@
+// furreco da sorte
 import { AnimalInfo, LotteryContest, TicketCheckResult } from '../types/lottery';
 
 export const ANIMAL_GROUPS: AnimalInfo[] = [

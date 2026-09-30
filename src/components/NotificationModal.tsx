@@ -1,3 +1,4 @@
+// furreco da sorte
 import React, { useState } from 'react';
 import { Bell, Check, Trash2, X, Volume2, Sparkles, AlertCircle, Clock, Shield, Contrast, Eye, Compass } from 'lucide-react';
 import { PushNotification } from '../types/lottery';

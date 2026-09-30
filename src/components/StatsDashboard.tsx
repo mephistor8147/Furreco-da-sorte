@@ -1,3 +1,4 @@
+// furreco da sorte
 import React, { useState } from 'react';
 import { BarChart3, TrendingUp, Flame, Snowflake, PieChart, ShieldCheck } from 'lucide-react';
 import { LotteryContest } from '../types/lottery';

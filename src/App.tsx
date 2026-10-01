@@ -18,7 +18,7 @@ import {
   NotificationSettings,
 } from './utils/notificationService';
 import { PushNotification } from './types/lottery';
-import { ShieldCheck, Compass } from 'lucide-react';
+import { Compass } from 'lucide-react';
 import { ResponsibleGamingCard } from './components/ResponsibleGamingCard';
 import { OnboardingTourModal } from './components/OnboardingTourModal';
 import { MilharLookupView } from './components/MilharLookupView';
@@ -88,15 +88,17 @@ export default function App() {
     }
   }, [settings]);
 
-  // Automated notification check on initial load (simulation of next draw detection)
+  // Automated notification check on initial load (next draw detection)
   useEffect(() => {
     const hasUpcomingAlert = notifications.some(n => n.tipo === 'sorteio' && !n.lida);
     if (!hasUpcomingAlert && settings.alertBeforeDraw) {
       const timer = setTimeout(() => {
+        const nextNum = proximoConcurso?.numero || (contests[0]?.concurso ? contests[0].concurso + 1 : 6106);
+        const nextDate = proximoConcurso?.dataEstimada || 'Sábado';
         const nextAlert: PushNotification = {
           id: `notif-auto-${Date.now()}`,
           titulo: 'Próximo Sorteio da Federal se Aproximando!',
-          mensagem: 'O Concurso 5946 será sorteado às 19:00h no Espaço da Sorte. Gere seus bilhetes da sorte no Furreco!',
+          mensagem: `O Concurso ${nextNum} (${nextDate}) será sorteado no Espaço da Sorte. Gere seus bilhetes da sorte no Furreco!`,
           horario: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
           lida: false,
           tipo: 'sorteio',
@@ -109,7 +111,7 @@ export default function App() {
 
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [proximoConcurso, contests, notifications, settings]);
 
   const handleToggleSound = () => {
     setSettings(prev => ({ ...prev, soundEnabled: !prev.soundEnabled }));
@@ -249,6 +251,7 @@ export default function App() {
         {activeTab === 'stats' && (
           <StatsDashboard
             contests={contests}
+            onNavigateToTab={setActiveTab}
           />
         )}
 
@@ -292,30 +295,21 @@ export default function App() {
           <OddsCalculatorView />
         )}
 
-        {/* Tab 6: Responsible Gaming & Bicho Tips dedicated view */}
+        {/* Tab 6: Responsible Gaming & Bicho Tips dedicated exclusive view with live Caixa draw sync */}
         {activeTab === 'responsible' && (
           <ResponsibleGamingCard
             contests={contests}
             onPlayChime={() => settings.soundEnabled && playNotificationSound()}
+            isLive={isLive}
+            isSyncing={isSyncing}
+            lastSyncTime={lastSyncTime}
+            latestContest={contests[0]}
+            proximoConcurso={proximoConcurso}
+            onSyncNow={() => {
+              if (settings.soundEnabled) playNotificationSound();
+              syncNow(true);
+            }}
           />
-        )}
-
-        {/* Subtle, non-duplicated Responsible Gaming link banner on other tabs */}
-        {activeTab !== 'responsible' && (
-          <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs shadow-md">
-            <div className="flex items-center gap-2.5 text-slate-300">
-              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span>
-                <strong className="text-white">Apostas Conscientes (+18):</strong> Conheça as 3 Peças dos Bichos, Milhar, Centena, Duque e Terno estatísticos da Federal.
-              </span>
-            </div>
-            <button
-              onClick={() => setActiveTab('responsible')}
-              className="px-3.5 py-1.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 border border-emerald-500/40 text-xs font-bold transition-all cursor-pointer shrink-0 active:scale-95"
-            >
-              Ver 3 Peças & Jogo Consciente →
-            </button>
-          </div>
         )}
       </main>
 
@@ -340,7 +334,13 @@ export default function App() {
             <span>·</span>
             <span>Sorteios às Quartas e Sábados às 19h</span>
             <span>·</span>
-            <span>Jogo Responsável (+18)</span>
+            <button
+              onClick={() => setActiveTab('responsible')}
+              className="text-emerald-400/90 hover:text-emerald-300 font-semibold transition-colors cursor-pointer"
+              title="Acessar o menu exclusivo de Apostas Conscientes"
+            >
+              Apostas Conscientes (+18)
+            </button>
           </div>
         </div>
       </footer>

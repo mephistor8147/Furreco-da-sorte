@@ -386,14 +386,18 @@ export const Header: React.FC<HeaderProps> = ({
 
           <button
             onClick={() => setActiveTab('responsible')}
-            className={`px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
+            className={`px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer border ${
               activeTab === 'responsible'
-                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-900/40'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-bold border-emerald-400 shadow-md shadow-emerald-900/40 ring-1 ring-emerald-300/40'
+                : 'text-emerald-400 hover:text-emerald-200 hover:bg-slate-800/80 border-emerald-500/40 bg-emerald-950/30'
             }`}
+            title="Menu Exclusivo: Apostas Conscientes, Gestão de Banca e Regras de Ouro"
           >
             <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
-            <span>Jogo Consciente & Bancas</span>
+            <span>Apostas Conscientes</span>
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              +18
+            </span>
           </button>
         </nav>
       </div>

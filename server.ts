@@ -164,6 +164,8 @@ function parseMirrorContest(data: any): ParsedContest | null {
 
 // Pre-seeded authentic contests for instant offline / fallback availability
 const SEED_CONTESTS_DATA: { concurso: number; data: string; diaSemana: 'Quarta-feira' | 'Sábado'; bilhetes: [string, string, string, string, string]; acumulou?: boolean }[] = [
+  { concurso: 6105, data: '30/09/2026', diaSemana: 'Quarta-feira', bilhetes: ['41092', '23453', '03271', '18708', '66303'] },
+  { concurso: 6104, data: '27/09/2026', diaSemana: 'Sábado', bilhetes: ['59074', '03557', '20563', '40449', '07802'] },
   { concurso: 5945, data: '19/09/2026', diaSemana: 'Sábado', bilhetes: ['48291', '73104', '19852', '65430', '02816'] },
   { concurso: 5944, data: '16/09/2026', diaSemana: 'Quarta-feira', bilhetes: ['83574', '24918', '51063', '90427', '37185'] },
   { concurso: 5943, data: '12/09/2026', diaSemana: 'Sábado', bilhetes: ['15923', '88410', '42709', '63184', '97051'] },
@@ -223,11 +225,11 @@ const initialSeed = buildSeedContests();
 const cache: ContestCache = {
   contests: initialSeed,
   lastFetchTime: Date.now(),
-  latestConcurso: initialSeed[0]?.concurso || 5945,
+  latestConcurso: initialSeed[0]?.concurso || 6105,
   proximoConcurso: {
-    numero: (initialSeed[0]?.concurso || 5945) + 1,
-    dataEstimada: '23/09/2026',
-    diaSemana: 'Quarta-feira',
+    numero: (initialSeed[0]?.concurso || 6105) + 1,
+    dataEstimada: '03/10/2026',
+    diaSemana: 'Sábado',
     premioEstimado: 'R$ 500.000,00',
   },
   isUpdating: false,
@@ -241,8 +243,8 @@ const CAIXA_HEADERS = {
 // Resilient fetch for real-time Federal contests with multi-tier failover
 async function fetchCaixaFederalContests(count = 20, force = false): Promise<ParsedContest[]> {
   const now = Date.now();
-  // Return cache if valid (60-second TTL) and not forced
-  if (!force && cache.contests.length >= count && now - cache.lastFetchTime < 60000) {
+  // Return cache if valid (30-second TTL) and not forced
+  if (!force && cache.contests.length >= count && now - cache.lastFetchTime < 30000) {
     return cache.contests.slice(0, count);
   }
 
@@ -253,47 +255,86 @@ async function fetchCaixaFederalContests(count = 20, force = false): Promise<Par
   cache.isUpdating = true;
 
   try {
-    let fetchedContests: ParsedContest[] = [];
+    const fetchedContests: ParsedContest[] = [];
 
-    // Attempt 1: High-availability Loteria Federal Mirror API
+    // Attempt 1: Direct Official Caixa Econômica Federal API (Real-time live draw)
     try {
-      const mirrorRes = await fetch('https://loteriascaixa-api.herokuapp.com/api/federal', {
-        headers: { 'Accept': 'application/json' },
-        signal: AbortSignal.timeout(5000),
+      const caixaRes = await fetch('https://servicebus2.caixa.gov.br/portaldeloterias/api/federal', {
+        headers: CAIXA_HEADERS,
+        signal: AbortSignal.timeout(6000),
       });
 
-      if (mirrorRes.ok) {
-        const mirrorData = await mirrorRes.json();
-        if (Array.isArray(mirrorData) && mirrorData.length > 0) {
-          fetchedContests = mirrorData
-            .slice(0, count)
-            .map(parseMirrorContest)
-            .filter((c): c is ParsedContest => c !== null);
-          console.log(`[Furreco] Live API sync: Received ${fetchedContests.length} contests (Latest: Conc. ${fetchedContests[0]?.concurso})`);
+      if (caixaRes.ok) {
+        const caixaData = await caixaRes.json();
+        const parsedLatest = parseCaixaContest(caixaData);
+        if (parsedLatest && parsedLatest.concurso > 0) {
+          fetchedContests.push(parsedLatest);
+          console.log(`[Furreco] Caixa Oficial Ao Vivo: Concurso ${parsedLatest.concurso} (${parsedLatest.data}) apurado com sucesso!`);
+
+          // If cache doesn't have the previous contest yet, fetch it to maintain depth
+          if (!cache.contests.some(c => c.concurso === parsedLatest.concurso - 1)) {
+            try {
+              const prevRes = await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/federal/${parsedLatest.concurso - 1}`, {
+                headers: CAIXA_HEADERS,
+                signal: AbortSignal.timeout(4000),
+              });
+              if (prevRes.ok) {
+                const prevData = await prevRes.json();
+                const parsedPrev = parseCaixaContest(prevData);
+                if (parsedPrev) {
+                  fetchedContests.push(parsedPrev);
+                }
+              }
+            } catch {
+              // Ignore single previous fetch error
+            }
+          }
+        }
+      }
+    } catch (e: any) {
+      console.warn('[Furreco] Aviso ao consultar Caixa Oficial direta:', e.message);
+    }
+
+    // Attempt 2: High-availability Loteria Federal Mirror API (for historical depth or failover)
+    try {
+      // First try /latest endpoint for ultra-fast check
+      const mirrorLatestRes = await fetch('https://loteriascaixa-api.herokuapp.com/api/federal/latest', {
+        headers: { 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(4000),
+      });
+
+      if (mirrorLatestRes.ok) {
+        const mirrorLatestData = await mirrorLatestRes.json();
+        const parsed = parseMirrorContest(mirrorLatestData);
+        if (parsed && !fetchedContests.some(c => c.concurso === parsed.concurso)) {
+          fetchedContests.push(parsed);
+        }
+      }
+
+      // If we need a wider range and cache is shallow
+      if (cache.contests.length < count) {
+        const mirrorRes = await fetch('https://loteriascaixa-api.herokuapp.com/api/federal', {
+          headers: { 'Accept': 'application/json' },
+          signal: AbortSignal.timeout(6000),
+        });
+
+        if (mirrorRes.ok) {
+          const mirrorData = await mirrorRes.json();
+          if (Array.isArray(mirrorData) && mirrorData.length > 0) {
+            const parsedList = mirrorData
+              .slice(0, count)
+              .map(parseMirrorContest)
+              .filter((c): c is ParsedContest => c !== null);
+            parsedList.forEach(c => {
+              if (!fetchedContests.some(f => f.concurso === c.concurso)) {
+                fetchedContests.push(c);
+              }
+            });
+          }
         }
       }
     } catch {
-      // Mirror API not reachable or timed out, attempt direct Caixa API
-    }
-
-    // Attempt 2: Direct Caixa API (with silent catch for 403 cloud blocks)
-    if (fetchedContests.length === 0) {
-      try {
-        const caixaRes = await fetch('https://servicebus2.caixa.gov.br/portaldeloterias/api/federal', {
-          headers: CAIXA_HEADERS,
-          signal: AbortSignal.timeout(4000),
-        });
-
-        if (caixaRes.ok) {
-          const caixaData = await caixaRes.json();
-          const parsed = parseCaixaContest(caixaData);
-          if (parsed) {
-            fetchedContests.push(parsed);
-          }
-        }
-      } catch {
-        // Silently caught, proceed to fallback cache
-      }
+      // Mirror API not reachable or timed out
     }
 
     // Merge fetched contests into memory cache

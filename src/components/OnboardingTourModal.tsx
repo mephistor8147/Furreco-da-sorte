@@ -202,18 +202,18 @@ export const OnboardingTourModal: React.FC<OnboardingTourModalProps> = ({
     },
     {
       id: 'odds_responsible',
-      badge: 'Jogo Consciente',
-      title: '🛡️ Probabilidades & Gestão da Banca',
-      subtitle: 'Controle de Gastos e Palpites de Bicho Fracionados',
+      badge: 'Apostas Conscientes',
+      title: '🛡️ Apostas Conscientes & Gestão de Banca',
+      subtitle: 'Controle de Gastos e Palpites de Bicho Fracionados (+18)',
       description: [
-        'O Furreco incentiva o jogo recreativo responsável através de duas ferramentas essenciais:',
+        'O Furreco da Sorte conta com um menu exclusivo dedicado a Apostas Conscientes e educação estatística:',
         '• Calculadora de Probabilidades: confira as chances reais para cada faixa (1º Prêmio, Milhar, Centena, Dezena e Terminação).',
         '• Simulador de Teto Semanal: defina um teto (ex.: R$ 10 ou R$ 15 por semana) para manter suas apostas sob controle total.',
         '• Palpites para Bancas: sugestões de Milhar (4d), Centena (3d) e Duque de Dezenas com orientação para apostar frações de R$ 0,50 a R$ 1,00.',
       ],
       tips: '💡 Dica: Nunca encare loterias como investimento. Aposte apenas pequenos valores de lazer que não comprometam seu orçamento.',
       targetTab: 'responsible',
-      actionLabel: 'Ver Ferramentas de Jogo Consciente',
+      actionLabel: 'Abrir Menu Apostas Conscientes',
       icon: <ShieldCheck className="w-5 h-5 text-emerald-400" />,
       accentColor: 'from-emerald-500/20 via-slate-900 to-transparent border-emerald-500/40',
       visualPreview: (

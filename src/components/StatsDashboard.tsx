@@ -8,14 +8,17 @@ import {
   calculateParityStats,
   calculateAnimalStats,
 } from '../data/mockLotteryData';
+import { ResponsibleTipsAccuracyCard } from './ResponsibleTipsAccuracyCard';
 
 interface StatsDashboardProps {
   contests: LotteryContest[];
   onSelectDezena?: (dezena: string) => void;
+  onNavigateToTab?: (tab: 'stats' | 'history' | 'generator' | 'weekly' | 'odds' | 'responsible' | 'milhar') => void;
 }
 
 export const StatsDashboard: React.FC<StatsDashboardProps> = ({
   contests,
+  onNavigateToTab,
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<'finais' | 'dezenas' | 'atrasometro' | 'bichos'>('finais');
 
@@ -94,6 +97,12 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({
           <p className="text-[10px] sm:text-[11px] text-slate-500 mt-1.5 line-clamp-1">Mais sorteado no 1º prêmio</p>
         </div>
       </div>
+
+      {/* Card de Auditoria Estatística: Taxa de Acertos e Erros de Apostas Conscientes */}
+      <ResponsibleTipsAccuracyCard
+        contests={contests}
+        onNavigateToTab={onNavigateToTab}
+      />
 
       {/* Main Analysis Section */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 sm:p-6 shadow-xl">

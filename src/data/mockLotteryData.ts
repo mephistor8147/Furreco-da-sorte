@@ -5,6 +5,52 @@ import { getAnimalByDezena, ANIMAL_GROUPS } from '../utils/lotteryUtils';
 // Concursos recentes da Loteria Federal
 export const LOTTERY_CONTESTS: LotteryContest[] = [
   {
+    concurso: 6105,
+    data: '30/09/2026',
+    diaSemana: 'Quarta-feira',
+    local: 'Espaço da Sorte, São Paulo, SP',
+    acumulou: false,
+    arrecadacaoTotal: 4200000,
+    premios: [
+      { ordem: 1, bilhete: '41092', valorPremio: 500000 },
+      { ordem: 2, bilhete: '23453', valorPremio: 35000 },
+      { ordem: 3, bilhete: '03271', valorPremio: 30000 },
+      { ordem: 4, bilhete: '18708', valorPremio: 25000 },
+      { ordem: 5, bilhete: '66303', valorPremio: 20363 },
+    ],
+    bichoPrincipal: getAnimalByDezena('92'), // Urso (89-92)
+    todosBichos: [
+      getAnimalByDezena('92'),
+      getAnimalByDezena('53'),
+      getAnimalByDezena('71'),
+      getAnimalByDezena('08'),
+      getAnimalByDezena('03'),
+    ],
+  },
+  {
+    concurso: 6104,
+    data: '27/09/2026',
+    diaSemana: 'Sábado',
+    local: 'Espaço da Sorte, São Paulo, SP',
+    acumulou: false,
+    arrecadacaoTotal: 4200000,
+    premios: [
+      { ordem: 1, bilhete: '59074', valorPremio: 1350000 },
+      { ordem: 2, bilhete: '03557', valorPremio: 40000 },
+      { ordem: 3, bilhete: '20563', valorPremio: 30000 },
+      { ordem: 4, bilhete: '40449', valorPremio: 20000 },
+      { ordem: 5, bilhete: '07802', valorPremio: 17339 },
+    ],
+    bichoPrincipal: getAnimalByDezena('74'), // Pavão (73-76)
+    todosBichos: [
+      getAnimalByDezena('74'),
+      getAnimalByDezena('57'),
+      getAnimalByDezena('63'),
+      getAnimalByDezena('49'),
+      getAnimalByDezena('02'),
+    ],
+  },
+  {
     concurso: 5945,
     data: '19/09/2026',
     diaSemana: 'Sábado',

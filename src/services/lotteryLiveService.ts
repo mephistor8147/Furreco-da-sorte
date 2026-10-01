@@ -3,8 +3,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { LotteryContest } from '../types/lottery';
 import { LOTTERY_CONTESTS as FALLBACK_CONTESTS } from '../data/mockLotteryData';
 
-const CACHE_STORAGE_KEY = 'furreco_caixa_live_contests_v2';
-const LAST_SYNC_KEY = 'furreco_caixa_last_sync_timestamp';
+const CACHE_STORAGE_KEY = 'furreco_caixa_live_contests_v3';
+const LAST_SYNC_KEY = 'furreco_caixa_last_sync_timestamp_v3';
 
 export interface NextContestLiveInfo {
   numero: number;

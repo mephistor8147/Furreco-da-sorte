@@ -47,6 +47,10 @@ export interface TrioCombinations {
 
 export interface BichoStatsReport {
   totalContestsAnalyzed: number;
+  latestContestNum: number;
+  latestContestDate: string;
+  latestAnimal: AnimalInfo;
+  latestTicket: string;
   hotAnimals: BichoFrequency[];
   delayedAnimals: BichoFrequency[];
   topDezenas: { dezena: string; count: number; animal: AnimalInfo }[];
@@ -78,7 +82,11 @@ export function computeBichoStatistics(contests: LotteryContest[]): BichoStatsRe
   const centenaMap = new Map<string, number>();
   const milharMap = new Map<string, number>();
 
-  const latestContestNum = contests.length > 0 ? contests[0].concurso : 5945;
+  const latest = contests.length > 0 ? contests[0] : undefined;
+  const latestContestNum = latest ? latest.concurso : 6105;
+  const latestContestDate = latest ? latest.data : '30/09/2026';
+  const latestTicket = latest && latest.premios[0] ? latest.premios[0].bilhete : '41092';
+  const latestAnimal = latest ? latest.bichoPrincipal : getAnimalByDezena('92');
 
   // Process all contests
   contests.forEach(contest => {
@@ -331,6 +339,10 @@ export function computeBichoStatistics(contests: LotteryContest[]): BichoStatsRe
 
   return {
     totalContestsAnalyzed: contests.length,
+    latestContestNum,
+    latestContestDate,
+    latestAnimal,
+    latestTicket,
     hotAnimals,
     delayedAnimals,
     topDezenas,
@@ -339,5 +351,193 @@ export function computeBichoStatistics(contests: LotteryContest[]): BichoStatsRe
     suggestions,
     threePicks,
     trioCombinations,
+  };
+}
+
+export interface ContestTipAudit {
+  concurso: number;
+  data: string;
+  firstPrizeTicket: string;
+  firstPrizeAnimal: AnimalInfo;
+  allDrawnPrizes: Array<{ ordem: number; ticket: string; dezena: string; animal: AnimalInfo }>;
+  tips: {
+    peca1: BichoBetSuggestion;
+    peca2: BichoBetSuggestion;
+    peca3: BichoBetSuggestion;
+  };
+  hitType: 'cabeca' | 'cercado' | 'erro';
+  hitDetails: string[];
+  hitPiece1: boolean;
+  hitPiece2: boolean;
+  hitPiece3: boolean;
+  hitDezenas: string[];
+  hitDuqueGrupos: boolean;
+}
+
+export interface BichoTipsAccuracyReport {
+  totalAudited: number;
+  totalHitsCercado: number;
+  accuracyRateCercado: number;
+  totalHitsCabeca: number;
+  accuracyRateCabeca: number;
+  totalErrors: number;
+  errorRate: number;
+  piece1Hits: number;
+  piece1Rate: number;
+  piece2Hits: number;
+  piece2Rate: number;
+  piece3Hits: number;
+  piece3Rate: number;
+  duqueHits: number;
+  duqueRate: number;
+  audits: ContestTipAudit[];
+}
+
+export function computeBichoAccuracyReport(contests: LotteryContest[]): BichoTipsAccuracyReport {
+  if (!contests || contests.length < 5) {
+    return {
+      totalAudited: 0,
+      totalHitsCercado: 0,
+      accuracyRateCercado: 0,
+      totalHitsCabeca: 0,
+      accuracyRateCabeca: 0,
+      totalErrors: 0,
+      errorRate: 0,
+      piece1Hits: 0,
+      piece1Rate: 0,
+      piece2Hits: 0,
+      piece2Rate: 0,
+      piece3Hits: 0,
+      piece3Rate: 0,
+      duqueHits: 0,
+      duqueRate: 0,
+      audits: [],
+    };
+  }
+
+  // Ensure contests are sorted descending by concurso number
+  const sorted = [...contests].sort((a, b) => b.concurso - a.concurso);
+  const maxAudits = Math.min(sorted.length - 4, 30);
+  const audits: ContestTipAudit[] = [];
+
+  let totalHitsCercado = 0;
+  let totalHitsCabeca = 0;
+  let totalErrors = 0;
+  let piece1Hits = 0;
+  let piece2Hits = 0;
+  let piece3Hits = 0;
+  let duqueHits = 0;
+
+  for (let i = 0; i < maxAudits; i++) {
+    const target = sorted[i];
+    const historyBefore = sorted.slice(i + 1);
+
+    if (historyBefore.length < 3) break;
+
+    // Compute tips as they were generated right before target draw
+    const stats = computeBichoStatistics(historyBefore);
+    const [peca1, peca2, peca3] = stats.threePicks;
+
+    const g1 = peca1.animal.grupo;
+    const g2 = peca2.animal.grupo;
+    const g3 = peca3.animal.grupo;
+    const tipDezenas = [peca1.dezena, peca2.dezena, peca3.dezena];
+
+    // Target contest results breakdown
+    const allDrawnPrizes = target.premios.map(p => {
+      const dezena = p.bilhete.slice(-2);
+      return {
+        ordem: p.ordem,
+        ticket: p.bilhete,
+        dezena,
+        animal: getAnimalByDezena(dezena),
+      };
+    });
+
+    const headPrize = allDrawnPrizes[0];
+    const hitHead = (headPrize.animal.grupo === g1 || headPrize.animal.grupo === g2 || headPrize.animal.grupo === g3);
+
+    const hitP1Prizes = allDrawnPrizes.filter(p => p.animal.grupo === g1);
+    const hitP2Prizes = allDrawnPrizes.filter(p => p.animal.grupo === g2);
+    const hitP3Prizes = allDrawnPrizes.filter(p => p.animal.grupo === g3);
+
+    const hitPiece1 = hitP1Prizes.length > 0;
+    const hitPiece2 = hitP2Prizes.length > 0;
+    const hitPiece3 = hitP3Prizes.length > 0;
+
+    const hitCercado = hitPiece1 || hitPiece2 || hitPiece3;
+    const hitDuqueGrupos = (hitPiece1 && hitPiece2) || (hitPiece1 && hitPiece3) || (hitPiece2 && hitPiece3);
+
+    const hitDezenas = allDrawnPrizes
+      .filter(p => tipDezenas.includes(p.dezena))
+      .map(p => p.dezena);
+
+    const hitDetails: string[] = [];
+    if (hitHead) {
+      hitDetails.push(`🎯 Cabeça: ${headPrize.animal.nome} (Gr. ${headPrize.animal.grupo}) no 1º Prêmio com ${headPrize.ticket}`);
+    }
+    if (hitPiece1) {
+      hitDetails.push(`🔥 Peça 1 (${peca1.animal.nome}): ${hitP1Prizes.map(p => `${p.ordem}º prêmio (${p.ticket})`).join(', ')}`);
+    }
+    if (hitPiece2) {
+      hitDetails.push(`⏳ Peça 2 (${peca2.animal.nome}): ${hitP2Prizes.map(p => `${p.ordem}º prêmio (${p.ticket})`).join(', ')}`);
+    }
+    if (hitPiece3) {
+      hitDetails.push(`⚖️ Peça 3 (${peca3.animal.nome}): ${hitP3Prizes.map(p => `${p.ordem}º prêmio (${p.ticket})`).join(', ')}`);
+    }
+    if (hitDezenas.length > 0) {
+      hitDetails.push(`✨ Dezena(s) premiada(s): ${hitDezenas.join(', ')}`);
+    }
+
+    const hitType: 'cabeca' | 'cercado' | 'erro' = hitHead ? 'cabeca' : hitCercado ? 'cercado' : 'erro';
+
+    if (hitHead) totalHitsCabeca++;
+    if (hitCercado) totalHitsCercado++;
+    else totalErrors++;
+
+    if (hitPiece1) piece1Hits++;
+    if (hitPiece2) piece2Hits++;
+    if (hitPiece3) piece3Hits++;
+    if (hitDuqueGrupos) duqueHits++;
+
+    audits.push({
+      concurso: target.concurso,
+      data: target.data,
+      firstPrizeTicket: target.premios[0].bilhete,
+      firstPrizeAnimal: headPrize.animal,
+      allDrawnPrizes,
+      tips: { peca1, peca2, peca3 },
+      hitType,
+      hitDetails,
+      hitPiece1,
+      hitPiece2,
+      hitPiece3,
+      hitDezenas,
+      hitDuqueGrupos,
+    });
+  }
+
+  const totalAudited = audits.length;
+  const accuracyRateCercado = totalAudited > 0 ? (totalHitsCercado / totalAudited) * 100 : 0;
+  const accuracyRateCabeca = totalAudited > 0 ? (totalHitsCabeca / totalAudited) * 100 : 0;
+  const errorRate = totalAudited > 0 ? (totalErrors / totalAudited) * 100 : 0;
+
+  return {
+    totalAudited,
+    totalHitsCercado,
+    accuracyRateCercado,
+    totalHitsCabeca,
+    accuracyRateCabeca,
+    totalErrors,
+    errorRate,
+    piece1Hits,
+    piece1Rate: totalAudited > 0 ? (piece1Hits / totalAudited) * 100 : 0,
+    piece2Hits,
+    piece2Rate: totalAudited > 0 ? (piece2Hits / totalAudited) * 100 : 0,
+    piece3Hits,
+    piece3Rate: totalAudited > 0 ? (piece3Hits / totalAudited) * 100 : 0,
+    duqueHits,
+    duqueRate: totalAudited > 0 ? (duqueHits / totalAudited) * 100 : 0,
+    audits,
   };
 }

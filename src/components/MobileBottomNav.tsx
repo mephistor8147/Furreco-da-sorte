@@ -5,6 +5,10 @@ import { Flame, Search, Target, Sparkles, ShieldCheck, MoreHorizontal, BarChart3
 interface MobileBottomNavProps {
   activeTab: 'stats' | 'history' | 'generator' | 'weekly' | 'odds' | 'responsible' | 'milhar';
   setActiveTab: (tab: 'stats' | 'history' | 'generator' | 'weekly' | 'odds' | 'responsible' | 'milhar') => void;
+  onNavigateWithSubTab?: (
+    tab: 'stats' | 'history' | 'generator' | 'weekly' | 'odds' | 'responsible' | 'milhar',
+    subTab?: 'finais' | 'dezenas' | 'atrasometro' | 'bichos' | 'auditoria'
+  ) => void;
   unreadCount?: number;
   onOpenNotifications?: () => void;
   onOpenTour?: () => void;
@@ -13,6 +17,7 @@ interface MobileBottomNavProps {
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   activeTab,
   setActiveTab,
+  onNavigateWithSubTab,
   unreadCount = 0,
   onOpenNotifications,
   onOpenTour,
@@ -52,6 +57,26 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             </div>
 
             <div className="grid grid-cols-1 gap-2.5">
+              <button
+                onClick={() => {
+                  if (onNavigateWithSubTab) {
+                    onNavigateWithSubTab('stats', 'atrasometro');
+                  } else {
+                    handleSelectTab('stats');
+                  }
+                  setIsMenuOpen(false);
+                }}
+                className="w-full p-3.5 rounded-2xl border border-cyan-500/40 bg-cyan-950/30 text-left flex items-center gap-3.5 text-cyan-300 hover:bg-cyan-900/40 transition-all cursor-pointer min-h-[52px]"
+              >
+                <div className="w-10 h-10 rounded-xl bg-cyan-400/20 text-cyan-300 flex items-center justify-center font-bold text-lg shrink-0">
+                  ❄️
+                </div>
+                <div>
+                  <strong className="text-sm font-bold text-white block">Atrasômetro da Federal</strong>
+                  <span className="text-xs text-cyan-200/80">Dezenas, grupos e finais mais atrasados</span>
+                </div>
+              </button>
+
               <button
                 onClick={() => handleSelectTab('weekly')}
                 className={`w-full p-3.5 rounded-2xl border text-left flex items-center gap-3.5 transition-all cursor-pointer min-h-[52px] ${

@@ -30,6 +30,19 @@ const ONBOARDING_KEY = 'furreco_onboarding_completed_v1';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'stats' | 'history' | 'generator' | 'weekly' | 'odds' | 'responsible' | 'milhar'>('stats');
+  const [statsSubTab, setStatsSubTab] = useState<'finais' | 'dezenas' | 'atrasometro' | 'bichos' | 'auditoria'>('finais');
+  const [targetDezena, setTargetDezena] = useState<string | null>(null);
+
+  const handleNavigateToTab = (
+    tab: 'stats' | 'history' | 'generator' | 'weekly' | 'odds' | 'responsible' | 'milhar',
+    subTab?: 'finais' | 'dezenas' | 'atrasometro' | 'bichos' | 'auditoria'
+  ) => {
+    setActiveTab(tab);
+    if (subTab) {
+      setStatsSubTab(subTab);
+    }
+  };
+
   const [notifications, setNotifications] = useState<PushNotification[]>(getStoredNotifications());
   const [settings, setSettings] = useState<NotificationSettings>(getStoredSettings());
   const [isNotifModalOpen, setIsNotifModalOpen] = useState(false);
@@ -183,6 +196,8 @@ export default function App() {
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        statsSubTab={statsSubTab}
+        onNavigateWithSubTab={handleNavigateToTab}
         notifications={notifications}
         onOpenNotifications={() => setIsNotifModalOpen(true)}
         soundEnabled={settings.soundEnabled}
@@ -252,7 +267,9 @@ export default function App() {
         {activeTab === 'stats' && (
           <StatsDashboard
             contests={contests}
-            onNavigateToTab={setActiveTab}
+            initialSubTab={statsSubTab}
+            onSelectDezena={dez => setTargetDezena(dez)}
+            onNavigateToTab={handleNavigateToTab}
           />
         )}
 
@@ -261,7 +278,7 @@ export default function App() {
           <ContestHistoryView
             contests={contests}
             onPlayChime={() => settings.soundEnabled && playNotificationSound()}
-            onNavigateToTab={setActiveTab}
+            onNavigateToTab={handleNavigateToTab}
           />
         )}
 
@@ -270,7 +287,13 @@ export default function App() {
           <MilharLookupView
             contests={contests}
             onPlayChime={() => settings.soundEnabled && playNotificationSound()}
-            onNavigateToTab={setActiveTab}
+            onNavigateToTab={handleNavigateToTab}
+            initialMilhar={
+              targetDezena
+                ? (contests.flatMap(c => c.premios).map(p => p.bilhete.slice(-4)).find(m => m.endsWith(targetDezena)) || targetDezena.padStart(4, '0'))
+                : undefined
+            }
+            onSelectDezena={dez => setTargetDezena(dez)}
             highContrast={settings.highContrast}
           />
         )}
@@ -350,6 +373,7 @@ export default function App() {
       <MobileBottomNav
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        onNavigateWithSubTab={handleNavigateToTab}
         unreadCount={notifications.filter(n => !n.lida).length}
         onOpenNotifications={() => setIsNotifModalOpen(true)}
         onOpenTour={handleOpenTour}
@@ -368,13 +392,14 @@ export default function App() {
         onRequestPush={handleEnablePush}
         pushEnabled={pushEnabled}
         onOpenTour={handleOpenTour}
+        onNavigateToTab={handleNavigateToTab}
       />
 
       {/* Interactive Onboarding Tour Modal */}
       <OnboardingTourModal
         isOpen={isTourOpen}
         onClose={handleCloseTour}
-        onNavigateToTab={setActiveTab}
+        onNavigateToTab={handleNavigateToTab}
         onPlayChime={() => settings.soundEnabled && playNotificationSound()}
         highContrast={settings.highContrast}
       />

@@ -285,6 +285,14 @@ export const ContestHistoryView: React.FC<ContestHistoryViewProps> = ({
               Exato (5d)
             </button>
             <button
+              onClick={() => setFilterType('milhar')}
+              className={`px-2.5 py-1.5 rounded-lg font-medium whitespace-nowrap transition-colors shrink-0 cursor-pointer ${
+                filterType === 'milhar' ? 'bg-amber-400 text-slate-950 font-black' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              Milhar (4d)
+            </button>
+            <button
               onClick={() => setFilterType('centena')}
               className={`px-2.5 py-1.5 rounded-lg font-medium whitespace-nowrap transition-colors shrink-0 cursor-pointer ${
                 filterType === 'centena' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'

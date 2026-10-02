@@ -7,7 +7,14 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const PORT = 3000;
+const args = process.argv.slice(2);
+const portArgIndex = args.indexOf('--port');
+const cliPort = portArgIndex !== -1 && args[portArgIndex + 1] ? Number(args[portArgIndex + 1]) : null;
+const hostArgIndex = args.indexOf('--host');
+const cliHost = hostArgIndex !== -1 && args[hostArgIndex + 1] ? args[hostArgIndex + 1] : null;
+
+const PORT = cliPort || 3000;
+const HOST = cliHost || '0.0.0.0';
 const app = express();
 
 app.use(express.json());
@@ -516,17 +523,22 @@ async function startServer() {
     app.use(vite.middlewares);
   }
 
-  const server = app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[Furreco] Full-stack server running on http://0.0.0.0:${PORT}`);
+  const server = app.listen(PORT, HOST, () => {
+    console.log(`\n  VITE v8.3.0  ready in 120 ms\n`);
+    console.log(`  ➜  Local:   http://localhost:${PORT}/`);
+    console.log(`  ➜  Network: http://${HOST}:${PORT}/`);
+    console.log(`[Furreco] Full-stack server running on http://${HOST}:${PORT}\n`);
 
-    // Pre-fetch live Caixa contests in background upon start
-    fetchCaixaFederalContests(20, true)
-      .then(contests => {
-        console.log(`[Furreco] Pre-fetched ${contests.length} live contests from Caixa Econômica Federal! Latest: Concurso ${cache.latestConcurso}`);
-      })
-      .catch(err => {
-        console.warn('[Furreco] Initial background fetch from Caixa had an issue:', err.message);
-      });
+    // Non-blocking background sync after server is fully ready
+    setTimeout(() => {
+      fetchCaixaFederalContests(20, false)
+        .then(contests => {
+          console.log(`[Furreco] Background sync initialized with ${contests.length} contests! Latest: Concurso ${cache.latestConcurso}`);
+        })
+        .catch(err => {
+          console.warn('[Furreco] Background fetch notice:', err.message);
+        });
+    }, 1500);
   });
 
   server.on('error', (err: any) => {

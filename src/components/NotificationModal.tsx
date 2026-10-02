@@ -16,6 +16,7 @@ interface NotificationModalProps {
   onRequestPush: () => void;
   pushEnabled: boolean;
   onOpenTour?: () => void;
+  onNavigateToTab?: (tab: 'stats' | 'history' | 'generator' | 'weekly' | 'odds' | 'responsible' | 'milhar', subTab?: 'finais' | 'dezenas' | 'atrasometro' | 'bichos' | 'auditoria') => void;
 }
 
 export const NotificationModal: React.FC<NotificationModalProps> = ({
@@ -30,6 +31,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
   onRequestPush,
   pushEnabled,
   onOpenTour,
+  onNavigateToTab,
 }) => {
   const [activeTab, setActiveTab] = useState<'lista' | 'config'>('lista');
 
@@ -218,6 +220,36 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                         <span className="text-[10px] text-slate-500 font-mono">{notif.horario}</span>
                       </div>
                       <p className="text-xs text-slate-300 leading-relaxed">{notif.mensagem}</p>
+                      {notif.tipo === 'atraso' && onNavigateToTab && (
+                        <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between">
+                          <span className="text-[11px] text-cyan-400 font-semibold">❄️ Alerta de Defasagem</span>
+                          <button
+                            onClick={() => {
+                              onNavigateToTab('stats', 'atrasometro');
+                              onClose();
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 hover:text-white hover:bg-cyan-900/60 text-[11px] font-bold transition-all cursor-pointer inline-flex items-center gap-1 shadow-sm"
+                          >
+                            <span>Abrir Atrasômetro</span>
+                            <span>→</span>
+                          </button>
+                        </div>
+                      )}
+                      {notif.tipo === 'resultado' && onNavigateToTab && (
+                        <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between">
+                          <span className="text-[11px] text-emerald-400 font-semibold">🍀 Caixa Oficial</span>
+                          <button
+                            onClick={() => {
+                              onNavigateToTab('history');
+                              onClose();
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 hover:text-white hover:bg-emerald-900/60 text-[11px] font-bold transition-all cursor-pointer inline-flex items-center gap-1 shadow-sm"
+                          >
+                            <span>Ver Sorteio Completo</span>
+                            <span>→</span>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

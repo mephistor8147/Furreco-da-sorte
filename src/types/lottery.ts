@@ -47,6 +47,33 @@ export interface DezenaStat {
   concursosAtrasada: number;
   grupo: number;
   nomeBicho: string;
+  lastSeenDate?: string;
+  lastPrizeTier?: number;
+  isNeverSeenInSample?: boolean;
+}
+
+export interface AnimalDelayStat {
+  grupo: number;
+  nome: string;
+  emoji: string;
+  dezenas: string[];
+  lastSeenContest: number;
+  lastSeenDate: string;
+  lastPrizeTier: number;
+  concursosAtrasado: number;
+  totalHits: number;
+  cabecaHits: number;
+  isNeverSeenInSample: boolean;
+}
+
+export interface FinalDelayStat {
+  digit: number;
+  lastSeenContest: number;
+  lastSeenDate: string;
+  lastPrizeTier: number;
+  concursosAtrasado: number;
+  totalHits: number;
+  cabecaHits: number;
 }
 
 export interface TicketCheckResult {

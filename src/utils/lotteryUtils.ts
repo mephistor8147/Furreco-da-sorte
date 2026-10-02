@@ -452,3 +452,116 @@ export function analyzeMilhar(milharInput: string, contests: LotteryContest[]): 
   };
 }
 
+/**
+ * Calculates all unique mathematical permutations of a 4-digit milhar.
+ * E.g., for "8291" (4 distinct digits) -> 24 permutations.
+ * For "1123" (1 pair) -> 12 permutations.
+ * For "1122" (2 pairs) -> 6 permutations.
+ * For "1112" (triple) -> 4 permutations.
+ * For "7777" (quadruple) -> 1 permutation.
+ */
+export function getMilharPermutations(milharInput: string): string[] {
+  const digits = milharInput.replace(/\D/g, '').padStart(4, '0').slice(-4).split('');
+  const results = new Set<string>();
+
+  function permute(arr: string[], m: string[] = []) {
+    if (arr.length === 0) {
+      results.add(m.join(''));
+    } else {
+      for (let i = 0; i < arr.length; i++) {
+        const curr = arr.slice();
+        const next = curr.splice(i, 1);
+        permute(curr.slice(), m.concat(next));
+      }
+    }
+  }
+
+  permute(digits);
+  return Array.from(results).sort();
+}
+
+export interface TopMilharItem {
+  milhar: string;
+  totalHits: number;
+  firstPrizeHits: number;
+  secondaryPrizeHits: number;
+  lastSeenContest: number | null;
+  concursosAtraso: number;
+  animal: ReturnType<typeof getAnimalByDezena>;
+  contests: number[];
+  prizes: { concurso: number; ordem: number; isFirstPrize: boolean; data: string }[];
+}
+
+/**
+ * Aggregates all thousands drawn across contests and sorts by frequency and recency.
+ */
+export function getTopMilharesFromContests(contests: LotteryContest[]): TopMilharItem[] {
+  const map = new Map<string, {
+    totalHits: number;
+    firstPrizeHits: number;
+    secondaryPrizeHits: number;
+    lastSeenContest: number | null;
+    contests: number[];
+    prizes: { concurso: number; ordem: number; isFirstPrize: boolean; data: string }[];
+  }>();
+
+  const latestNum = contests.length > 0 ? contests[0].concurso : 5945;
+
+  contests.forEach(contest => {
+    contest.premios.forEach(premio => {
+      const milhar = premio.bilhete.slice(-4);
+      const isFirst = premio.ordem === 1;
+      const existing = map.get(milhar) || {
+        totalHits: 0,
+        firstPrizeHits: 0,
+        secondaryPrizeHits: 0,
+        lastSeenContest: null,
+        contests: [],
+        prizes: [],
+      };
+
+      existing.totalHits += 1;
+      if (isFirst) {
+        existing.firstPrizeHits += 1;
+      } else {
+        existing.secondaryPrizeHits += 1;
+      }
+
+      if (existing.lastSeenContest === null) {
+        existing.lastSeenContest = contest.concurso;
+      }
+
+      if (!existing.contests.includes(contest.concurso)) {
+        existing.contests.push(contest.concurso);
+      }
+
+      existing.prizes.push({
+        concurso: contest.concurso,
+        ordem: premio.ordem,
+        isFirstPrize: isFirst,
+        data: contest.data,
+      });
+
+      map.set(milhar, existing);
+    });
+  });
+
+  return Array.from(map.entries())
+    .map(([milhar, data]) => ({
+      milhar,
+      totalHits: data.totalHits,
+      firstPrizeHits: data.firstPrizeHits,
+      secondaryPrizeHits: data.secondaryPrizeHits,
+      lastSeenContest: data.lastSeenContest,
+      concursosAtraso: data.lastSeenContest ? (latestNum - data.lastSeenContest) : contests.length,
+      animal: getAnimalByDezena(milhar.slice(-2)),
+      contests: data.contests,
+      prizes: data.prizes,
+    }))
+    .sort((a, b) => {
+      if (b.totalHits !== a.totalHits) return b.totalHits - a.totalHits;
+      if (b.firstPrizeHits !== a.firstPrizeHits) return b.firstPrizeHits - a.firstPrizeHits;
+      return a.concursosAtraso - b.concursosAtraso;
+    });
+}
+

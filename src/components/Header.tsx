@@ -1,6 +1,5 @@
-// furreco da sorte
 import React, { useState, useEffect } from 'react';
-import { Bell, Sparkles, Clock, CheckCircle2, Volume2, VolumeX, Flame, ShieldCheck, Contrast, HelpCircle, RefreshCw, Radio } from 'lucide-react';
+import { Bell, Sparkles, Clock, CheckCircle2, Volume2, VolumeX, Flame, ShieldCheck, Contrast, HelpCircle, RefreshCw, Radio, Snowflake } from 'lucide-react';
 import { getNextDrawDate } from '../utils/lotteryUtils';
 import { PushNotification, LotteryContest } from '../types/lottery';
 import { NextContestLiveInfo } from '../services/lotteryLiveService';
@@ -8,6 +7,11 @@ import { NextContestLiveInfo } from '../services/lotteryLiveService';
 interface HeaderProps {
   activeTab: 'stats' | 'history' | 'generator' | 'weekly' | 'odds' | 'responsible' | 'milhar';
   setActiveTab: (tab: 'stats' | 'history' | 'generator' | 'weekly' | 'odds' | 'responsible' | 'milhar') => void;
+  statsSubTab?: 'finais' | 'dezenas' | 'atrasometro' | 'bichos' | 'auditoria';
+  onNavigateWithSubTab?: (
+    tab: 'stats' | 'history' | 'generator' | 'weekly' | 'odds' | 'responsible' | 'milhar',
+    subTab?: 'finais' | 'dezenas' | 'atrasometro' | 'bichos' | 'auditoria'
+  ) => void;
   notifications: PushNotification[];
   onOpenNotifications: () => void;
   soundEnabled: boolean;
@@ -29,6 +33,8 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   activeTab,
   setActiveTab,
+  statsSubTab,
+  onNavigateWithSubTab,
   notifications,
   onOpenNotifications,
   soundEnabled,
@@ -328,15 +334,43 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="hidden md:block max-w-7xl mx-auto px-2 sm:px-6">
         <nav className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto py-2 scrollbar-none px-1">
           <button
-            onClick={() => setActiveTab('stats')}
+            onClick={() => {
+              if (onNavigateWithSubTab) {
+                onNavigateWithSubTab('stats', 'finais');
+              } else {
+                setActiveTab('stats');
+              }
+            }}
             className={`px-3.5 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer min-h-[44px] ${
-              activeTab === 'stats'
+              activeTab === 'stats' && statsSubTab !== 'atrasometro'
                 ? 'bg-emerald-600 text-white shadow-md shadow-emerald-900/40 font-black'
                 : 'text-slate-200 hover:text-white hover:bg-slate-800/80'
             }`}
           >
             <Flame className="w-4 h-4 text-rose-400" />
             <span>Estatísticas</span>
+          </button>
+
+          <button
+            onClick={() => {
+              if (onNavigateWithSubTab) {
+                onNavigateWithSubTab('stats', 'atrasometro');
+              } else {
+                setActiveTab('stats');
+              }
+            }}
+            className={`px-3.5 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer border min-h-[44px] ${
+              activeTab === 'stats' && statsSubTab === 'atrasometro'
+                ? 'bg-cyan-500 text-slate-950 font-black border-cyan-400 shadow-md shadow-cyan-900/40 ring-2 ring-cyan-300'
+                : 'text-cyan-300 hover:text-white hover:bg-slate-800/80 border-cyan-500/40 bg-cyan-950/20'
+            }`}
+            title="Atrasômetro da Federal: Dezenas, Bichos e Finais com maior tempo sem sair"
+          >
+            <Snowflake className="w-4 h-4 text-cyan-400" />
+            <span>Atrasômetro</span>
+            <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-cyan-400/20 text-cyan-200">
+              Federal
+            </span>
           </button>
 
           <button

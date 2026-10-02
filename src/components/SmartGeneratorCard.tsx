@@ -316,22 +316,22 @@ export const SmartGeneratorCard: React.FC<SmartGeneratorCardProps> = ({
             {/* Analysis & Breakdown Badges */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mt-3 sm:mt-4">
               <div className="bg-slate-950/70 border border-slate-800 rounded-xl p-2.5 sm:p-3 text-center">
-                <span className="text-[10px] sm:text-[11px] text-slate-400 block">Soma dos Dígitos</span>
-                <span className="text-base sm:text-lg font-bold font-mono text-amber-400 tabular-nums">{sumOfDigits}</span>
+                <span className="text-xs text-slate-300 font-bold block">Soma dos Dígitos</span>
+                <span className="text-lg sm:text-xl font-black font-mono text-amber-300 tabular-nums">{sumOfDigits}</span>
               </div>
               <div className="bg-slate-950/70 border border-slate-800 rounded-xl p-2.5 sm:p-3 text-center">
-                <span className="text-[10px] sm:text-[11px] text-slate-400 block">Paridade</span>
-                <span className="text-xs sm:text-sm font-bold text-slate-200">
+                <span className="text-xs text-slate-300 font-bold block">Paridade</span>
+                <span className="text-sm sm:text-base font-black text-slate-100">
                   {evenCount}P · {oddCount}I
                 </span>
               </div>
               <div className="bg-slate-950/70 border border-slate-800 rounded-xl p-2.5 sm:p-3 text-center">
-                <span className="text-[10px] sm:text-[11px] text-slate-400 block">Chance Teórica</span>
-                <span className="text-[11px] sm:text-xs font-bold text-emerald-400">1 em 100 mil</span>
+                <span className="text-xs text-slate-300 font-bold block">Chance Teórica</span>
+                <span className="text-xs sm:text-sm font-black text-emerald-400">1 em 100 mil</span>
               </div>
               <div className="bg-slate-950/70 border border-slate-800 rounded-xl p-2.5 sm:p-3 text-center">
-                <span className="text-[10px] sm:text-[11px] text-slate-400 block">Restituição (Final)</span>
-                <span className="text-[11px] sm:text-xs font-bold text-cyan-400">10% de chance</span>
+                <span className="text-xs text-slate-300 font-bold block">Restituição (Final)</span>
+                <span className="text-xs sm:text-sm font-black text-cyan-300">10% de chance</span>
               </div>
             </div>
 

@@ -404,30 +404,30 @@ export const ContestHistoryView: React.FC<ContestHistoryViewProps> = ({
                           : 'bg-slate-950/80 border-slate-800/80 hover:border-slate-700'
                       }`}
                     >
-                      <div className="flex items-center justify-between text-[10px] sm:text-[11px] mb-1 sm:mb-2">
-                        <span className={`font-bold uppercase ${isFirst ? 'text-amber-400' : 'text-slate-400'}`}>
+                      <div className="flex items-center justify-between text-xs mb-1.5 sm:mb-2">
+                        <span className={`font-black uppercase tracking-wide ${isFirst ? 'text-amber-400' : 'text-slate-300'}`}>
                           {p.ordem}º Prêmio
                         </span>
-                        {isFirst && <Award className="w-3.5 h-3.5 text-amber-400" />}
+                        {isFirst && <Award className="w-4 h-4 text-amber-400" />}
                       </div>
 
                       {/* Ticket Number */}
                       <div className="text-center py-1">
-                        <span className={`font-mono text-xl sm:text-2xl font-black tracking-wider block ${
-                          isFirst ? 'text-amber-300 text-2xl sm:text-2xl' : 'text-white'
+                        <span className={`font-mono text-2xl sm:text-3xl font-black tracking-wider block ${
+                          isFirst ? 'text-amber-300' : 'text-white'
                         }`}>
                           {highlightMatch(formatTicket(p.bilhete))}
                         </span>
                       </div>
 
                       {/* Prize Value & Animal */}
-                      <div className="mt-1.5 sm:mt-2 pt-1.5 sm:pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] sm:text-[11px]">
-                        <span className="font-mono text-emerald-400 font-semibold truncate">
+                      <div className="mt-2 pt-2 border-t border-slate-800 flex items-center justify-between text-xs sm:text-sm">
+                        <span className="font-mono text-emerald-400 font-bold truncate">
                           {formatCurrency(p.valorPremio)}
                         </span>
-                        <span className="text-slate-400 flex items-center gap-1 shrink-0" title={animal.nome}>
+                        <span className="text-slate-200 font-bold flex items-center gap-1 shrink-0" title={animal.nome}>
                           <span>{animal.emoji}</span>
-                          <span className="truncate max-w-[50px] sm:max-w-[60px] hidden xs:inline">{animal.nome}</span>
+                          <span className="truncate max-w-[70px] hidden xs:inline">{animal.nome}</span>
                         </span>
                       </div>
                     </div>

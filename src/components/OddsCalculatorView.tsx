@@ -32,11 +32,11 @@ export const OddsCalculatorView: React.FC = () => {
           </div>
 
           <div className="bg-emerald-950/50 border border-emerald-500/30 rounded-xl p-4 text-center min-w-[200px]">
-            <span className="text-[11px] text-emerald-300 uppercase font-bold block">
+            <span className="text-xs text-emerald-300 uppercase font-black block tracking-wide">
               Melhor Chance do Brasil
             </span>
-            <span className="text-2xl font-black text-emerald-400 font-mono">1 em 100.000</span>
-            <span className="text-[11px] text-slate-400 block mt-0.5">para o prêmio principal</span>
+            <span className="text-2xl sm:text-3xl font-black text-emerald-400 font-mono">1 em 100.000</span>
+            <span className="text-xs text-slate-200 block mt-0.5 font-medium">para o prêmio principal</span>
           </div>
         </div>
       </div>
@@ -45,16 +45,16 @@ export const OddsCalculatorView: React.FC = () => {
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 sm:p-6 shadow-xl">
         <div className="flex items-center gap-2 mb-3 sm:mb-4">
           <Calculator className="w-5 h-5 text-amber-400" />
-          <h3 className="text-sm sm:text-base font-bold text-white">
+          <h3 className="text-base sm:text-lg font-black text-white">
             Simulador de Probabilidade Acumulada
           </h3>
         </div>
 
         <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 sm:p-5 space-y-3 sm:space-y-4">
           <div>
-            <div className="flex items-center justify-between text-xs font-semibold text-slate-300 mb-2">
+            <div className="flex items-center justify-between text-xs sm:text-sm font-bold text-slate-200 mb-2">
               <span>Quantidade de Bilhetes na Aposta:</span>
-              <span className="font-mono text-base font-bold text-amber-400">
+              <span className="font-mono text-lg sm:text-xl font-black text-amber-300">
                 {ticketCount} {ticketCount === 1 ? 'bilhete' : 'bilhetes'}
               </span>
             </div>

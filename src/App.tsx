@@ -24,6 +24,7 @@ import { OnboardingTourModal } from './components/OnboardingTourModal';
 import { MilharLookupView } from './components/MilharLookupView';
 import { useLiveLotteryContests } from './services/lotteryLiveService';
 import { CaixaLiveSyncBanner } from './components/CaixaLiveSyncBanner';
+import { MobileBottomNav } from './components/MobileBottomNav';
 
 const ONBOARDING_KEY = 'furreco_onboarding_completed_v1';
 
@@ -203,7 +204,7 @@ export default function App() {
       />
 
       {/* Main App Content Viewport */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-3 sm:py-6 space-y-4 sm:space-y-6 pb-24 md:pb-8">
         {/* High Contrast Accessibility Indicator Bar when active */}
         {settings.highContrast && (
           <div className="bg-black border-2 border-amber-400 text-white px-3.5 py-2.5 rounded-xl flex flex-wrap items-center justify-between gap-2 text-xs font-bold shadow-lg">
@@ -314,15 +315,15 @@ export default function App() {
       </main>
 
       {/* App Footer */}
-      <footer className="border-t border-slate-900 bg-slate-950 py-6 sm:py-8 px-4 sm:px-6 text-[11px] sm:text-xs text-slate-500 mt-8 sm:mt-12">
+      <footer className="border-t border-slate-900 bg-slate-950 py-6 sm:py-8 px-4 sm:px-6 text-xs text-slate-400 mt-8 sm:mt-12 mb-16 md:mb-0">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 text-center sm:text-left">
           <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
-            <span className="font-bold text-slate-300">Furreco da Sorte</span>
+            <span className="font-bold text-slate-200">Furreco da Sorte</span>
             <span>·</span>
             <span>Estatísticas e Probabilidades da Loteria Federal</span>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-slate-400">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-slate-300">
             <button
               onClick={handleOpenTour}
               className="text-amber-400 hover:text-amber-300 font-semibold transition-colors cursor-pointer flex items-center gap-1"
@@ -344,6 +345,15 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Mobile-First Persistent Bottom Navigation Bar */}
+      <MobileBottomNav
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        unreadCount={notifications.filter(n => !n.lida).length}
+        onOpenNotifications={() => setIsNotifModalOpen(true)}
+        onOpenTour={handleOpenTour}
+      />
 
       {/* Notifications Drawer Modal */}
       <NotificationModal

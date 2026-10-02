@@ -545,24 +545,24 @@ Lembre-se: Jogue com responsabilidade (+18). Diversão sem exageros!`;
                       <div className="space-y-2">
                         {/* Milhar (4 dígitos) */}
                         <div className="bg-slate-900/90 border border-amber-500/30 rounded-xl p-3 relative overflow-hidden group">
-                          <div className="flex items-center justify-between text-[11px] text-slate-400 mb-0.5">
-                            <span className="font-semibold text-amber-300">Milhar (4 dígitos)</span>
+                          <div className="flex items-center justify-between text-xs text-slate-200 mb-0.5">
+                            <span className="font-bold text-amber-300">Milhar (4 dígitos)</span>
                             <button
                               onClick={() => handleCopyText(sug.milhar, `milhar-${sug.id}`)}
-                              className="text-slate-400 hover:text-white p-1 rounded transition-colors cursor-pointer"
+                              className="text-slate-300 hover:text-white p-1 rounded transition-colors cursor-pointer"
                               title="Copiar milhar"
                             >
                               {copiedKey === `milhar-${sug.id}` ? (
-                                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                <Check className="w-4 h-4 text-emerald-400" />
                               ) : (
-                                <Copy className="w-3.5 h-3.5" />
+                                <Copy className="w-4 h-4" />
                               )}
                             </button>
                           </div>
-                          <div className="font-mono text-2xl font-black text-amber-400 tracking-wider">
+                          <div className="font-mono text-2xl sm:text-3xl font-black text-amber-400 tracking-wider">
                             {sug.milhar}
                           </div>
-                          <div className="text-[9px] text-slate-400 mt-0.5 flex items-center justify-between">
+                          <div className="text-xs text-slate-200 mt-1 flex items-center justify-between font-semibold">
                             <span>Cabeça: ~4.000x</span>
                             <span>1º ao 5º: ~800x</span>
                           </div>
@@ -570,24 +570,24 @@ Lembre-se: Jogue com responsabilidade (+18). Diversão sem exageros!`;
 
                         {/* Centena (3 dígitos) */}
                         <div className="bg-slate-900/90 border border-emerald-500/30 rounded-xl p-3 relative overflow-hidden group">
-                          <div className="flex items-center justify-between text-[11px] text-slate-400 mb-0.5">
-                            <span className="font-semibold text-emerald-300">Centena (3 dígitos)</span>
+                          <div className="flex items-center justify-between text-xs text-slate-200 mb-0.5">
+                            <span className="font-bold text-emerald-300">Centena (3 dígitos)</span>
                             <button
                               onClick={() => handleCopyText(sug.centena, `centena-${sug.id}`)}
-                              className="text-slate-400 hover:text-white p-1 rounded transition-colors cursor-pointer"
+                              className="text-slate-300 hover:text-white p-1 rounded transition-colors cursor-pointer"
                               title="Copiar centena"
                             >
                               {copiedKey === `centena-${sug.id}` ? (
-                                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                <Check className="w-4 h-4 text-emerald-400" />
                               ) : (
-                                <Copy className="w-3.5 h-3.5" />
+                                <Copy className="w-4 h-4" />
                               )}
                             </button>
                           </div>
-                          <div className="font-mono text-2xl font-black text-emerald-400 tracking-wider">
+                          <div className="font-mono text-2xl sm:text-3xl font-black text-emerald-400 tracking-wider">
                             {sug.centena}
                           </div>
-                          <div className="text-[9px] text-slate-400 mt-0.5 flex items-center justify-between">
+                          <div className="text-xs text-slate-200 mt-1 flex items-center justify-between font-semibold">
                             <span>Cabeça: ~600x</span>
                             <span>1º ao 5º: ~120x</span>
                           </div>
@@ -595,8 +595,8 @@ Lembre-se: Jogue com responsabilidade (+18). Diversão sem exageros!`;
 
                         {/* Dezena (2 dígitos) */}
                         <div className="bg-slate-900/90 border border-cyan-500/30 rounded-xl p-3 relative overflow-hidden group">
-                          <div className="flex items-center justify-between text-[11px] text-slate-400 mb-0.5">
-                            <span className="font-semibold text-cyan-300">Dezena Foco (2 dígitos)</span>
+                          <div className="flex items-center justify-between text-xs text-slate-200 mb-0.5">
+                            <span className="font-bold text-cyan-300">Dezena Foco (2 dígitos)</span>
                             <button
                               onClick={() => handleCopyText(sug.dezena, `dezena-${sug.id}`)}
                               className="text-slate-400 hover:text-white p-1 rounded transition-colors cursor-pointer"

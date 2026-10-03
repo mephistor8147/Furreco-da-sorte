@@ -1,10 +1,11 @@
 // furreco da sorte
 import React, { useState } from 'react';
-import { Flame, Search, Target, Sparkles, ShieldCheck, MoreHorizontal, BarChart3, HelpCircle, X, Calculator, Bell } from 'lucide-react';
+import { Flame, Search, Target, Sparkles, ShieldCheck, MoreHorizontal, BarChart3, HelpCircle, X, Calculator, Bell, Snowflake } from 'lucide-react';
 
 interface MobileBottomNavProps {
   activeTab: 'stats' | 'history' | 'generator' | 'weekly' | 'odds' | 'responsible' | 'milhar';
   setActiveTab: (tab: 'stats' | 'history' | 'generator' | 'weekly' | 'odds' | 'responsible' | 'milhar') => void;
+  statsSubTab?: 'finais' | 'dezenas' | 'atrasometro' | 'bichos' | 'auditoria';
   onNavigateWithSubTab?: (
     tab: 'stats' | 'history' | 'generator' | 'weekly' | 'odds' | 'responsible' | 'milhar',
     subTab?: 'finais' | 'dezenas' | 'atrasometro' | 'bichos' | 'auditoria'
@@ -17,6 +18,7 @@ interface MobileBottomNavProps {
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   activeTab,
   setActiveTab,
+  statsSubTab,
   onNavigateWithSubTab,
   unreadCount = 0,
   onOpenNotifications,
@@ -57,6 +59,24 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             </div>
 
             <div className="grid grid-cols-1 gap-2.5">
+              {/* 0: Apostas Conscientes in drawer */}
+              <button
+                onClick={() => handleSelectTab('responsible')}
+                className={`w-full p-3.5 rounded-2xl border text-left flex items-center gap-3.5 transition-all cursor-pointer min-h-[52px] ${
+                  activeTab === 'responsible'
+                    ? 'bg-emerald-600/30 border-emerald-400 text-white font-black ring-1 ring-emerald-400'
+                    : 'bg-slate-950/80 border-slate-800 text-slate-200 hover:bg-slate-800'
+                }`}
+              >
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-lg shrink-0">
+                  <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                </div>
+                <div>
+                  <strong className="text-sm font-bold text-white block">Apostas Conscientes (+18)</strong>
+                  <span className="text-xs text-slate-300">Gestão de banca, autocontrole e regras de ouro</span>
+                </div>
+              </button>
+
               <button
                 onClick={() => {
                   if (onNavigateWithSubTab) {
@@ -160,97 +180,109 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
 
       {/* Persistent Bottom Bar (Visible on mobile only, < 768px) */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 border-t border-slate-800/90 backdrop-blur-xl px-1.5 py-1 flex items-center justify-around shadow-2xl safe-area-pb"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 border-t border-slate-800/90 backdrop-blur-xl px-1 py-1 flex items-center justify-around shadow-2xl safe-area-pb"
         aria-label="Navegação móvel principal"
       >
-        {/* 1: Estatísticas */}
+        {/* 1: Estatísticas Gerais */}
         <button
-          onClick={() => handleSelectTab('stats')}
-          className={`flex-1 py-1.5 px-1 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer min-h-[50px] ${
-            activeTab === 'stats'
+          onClick={() => {
+            if (onNavigateWithSubTab) {
+              onNavigateWithSubTab('stats', 'finais');
+            } else {
+              handleSelectTab('stats');
+            }
+          }}
+          className={`flex-1 py-1 px-0.5 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer min-h-[48px] ${
+            activeTab === 'stats' && statsSubTab !== 'atrasometro'
               ? 'text-emerald-400 font-black'
               : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          <div className={`p-1 rounded-lg ${activeTab === 'stats' ? 'bg-emerald-500/20 text-emerald-400' : ''}`}>
-            <Flame className="w-5 h-5" />
+          <div className={`p-1 rounded-lg ${activeTab === 'stats' && statsSubTab !== 'atrasometro' ? 'bg-emerald-500/20 text-emerald-400' : ''}`}>
+            <Flame className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <span className="text-[11px] font-bold tracking-tight">Stats</span>
+          <span className="text-[10px] font-bold tracking-tight">Stats</span>
         </button>
 
-        {/* 2: Concursos */}
+        {/* 2: Atrasômetro Direto */}
+        <button
+          onClick={() => {
+            if (onNavigateWithSubTab) {
+              onNavigateWithSubTab('stats', 'atrasometro');
+            } else {
+              handleSelectTab('stats');
+            }
+          }}
+          className={`flex-1 py-1 px-0.5 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer min-h-[48px] ${
+            activeTab === 'stats' && statsSubTab === 'atrasometro'
+              ? 'text-cyan-300 font-black'
+              : 'text-cyan-400/70 hover:text-cyan-300'
+          }`}
+        >
+          <div className={`p-1 rounded-lg ${activeTab === 'stats' && statsSubTab === 'atrasometro' ? 'bg-cyan-500/20 text-cyan-300 ring-1 ring-cyan-400/40' : ''}`}>
+            <Snowflake className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400" />
+          </div>
+          <span className="text-[10px] font-bold tracking-tight">Atrasômetro</span>
+        </button>
+
+        {/* 3: Sorteios */}
         <button
           onClick={() => handleSelectTab('history')}
-          className={`flex-1 py-1.5 px-1 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer min-h-[50px] ${
+          className={`flex-1 py-1 px-0.5 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer min-h-[48px] ${
             activeTab === 'history'
               ? 'text-emerald-400 font-black'
               : 'text-slate-400 hover:text-slate-200'
           }`}
         >
           <div className={`p-1 rounded-lg ${activeTab === 'history' ? 'bg-emerald-500/20 text-emerald-400' : ''}`}>
-            <Search className="w-5 h-5" />
+            <Search className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <span className="text-[11px] font-bold tracking-tight">Sorteios</span>
+          <span className="text-[10px] font-bold tracking-tight">Sorteios</span>
         </button>
 
-        {/* 3: Busca de Milhar */}
+        {/* 4: Busca de Milhar */}
         <button
           onClick={() => handleSelectTab('milhar')}
-          className={`flex-1 py-1.5 px-1 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer min-h-[50px] ${
+          className={`flex-1 py-1 px-0.5 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer min-h-[48px] ${
             activeTab === 'milhar'
               ? 'text-amber-400 font-black'
               : 'text-slate-400 hover:text-slate-200'
           }`}
         >
           <div className={`p-1 rounded-lg ${activeTab === 'milhar' ? 'bg-amber-400/20 text-amber-400' : ''}`}>
-            <Target className="w-5 h-5" />
+            <Target className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <span className="text-[11px] font-bold tracking-tight">Milhar</span>
+          <span className="text-[10px] font-bold tracking-tight">Milhar</span>
         </button>
 
-        {/* 4: Palpites */}
+        {/* 5: Palpites */}
         <button
           onClick={() => handleSelectTab('generator')}
-          className={`flex-1 py-1.5 px-1 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer min-h-[50px] ${
+          className={`flex-1 py-1 px-0.5 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer min-h-[48px] ${
             activeTab === 'generator'
               ? 'text-amber-300 font-black'
               : 'text-slate-400 hover:text-slate-200'
           }`}
         >
           <div className={`p-1 rounded-lg ${activeTab === 'generator' ? 'bg-amber-400/20 text-amber-300' : ''}`}>
-            <Sparkles className="w-5 h-5" />
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <span className="text-[11px] font-bold tracking-tight">Palpites</span>
-        </button>
-
-        {/* 5: Apostas Conscientes */}
-        <button
-          onClick={() => handleSelectTab('responsible')}
-          className={`flex-1 py-1.5 px-1 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer min-h-[50px] ${
-            activeTab === 'responsible'
-              ? 'text-emerald-300 font-black'
-              : 'text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          <div className={`p-1 rounded-lg ${activeTab === 'responsible' ? 'bg-emerald-500/25 text-emerald-300' : ''}`}>
-            <ShieldCheck className="w-5 h-5" />
-          </div>
-          <span className="text-[11px] font-bold tracking-tight">Consciente</span>
+          <span className="text-[10px] font-bold tracking-tight">Palpites</span>
         </button>
 
         {/* 6: Mais */}
         <button
           onClick={() => setIsMenuOpen(true)}
-          className={`flex-1 py-1.5 px-1 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer min-h-[50px] ${
-            isMoreActive
+          className={`flex-1 py-1 px-0.5 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer min-h-[48px] ${
+            isMoreActive || activeTab === 'responsible'
               ? 'text-emerald-400 font-black'
               : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          <div className={`p-1 rounded-lg ${isMoreActive ? 'bg-emerald-500/20 text-emerald-400' : ''}`}>
-            <MoreHorizontal className="w-5 h-5" />
+          <div className={`p-1 rounded-lg ${isMoreActive || activeTab === 'responsible' ? 'bg-emerald-500/20 text-emerald-400' : ''}`}>
+            <MoreHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <span className="text-[11px] font-bold tracking-tight">Mais</span>
+          <span className="text-[10px] font-bold tracking-tight">Mais</span>
         </button>
       </nav>
     </>

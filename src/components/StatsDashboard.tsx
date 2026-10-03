@@ -245,14 +245,17 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({
           </button>
           <button
             onClick={() => setActiveSubTab('atrasometro')}
-            className={`px-3 py-2.5 text-xs sm:text-sm font-extrabold rounded-lg transition-all text-center cursor-pointer min-h-[44px] flex items-center justify-center gap-1.5 shrink-0 ${
+            className={`px-3.5 py-2.5 text-xs sm:text-sm font-extrabold rounded-lg transition-all text-center cursor-pointer min-h-[44px] flex items-center justify-center gap-1.5 shrink-0 border ${
               activeSubTab === 'atrasometro'
-                ? 'bg-emerald-600 text-white shadow-md font-black ring-1 ring-emerald-400/50'
-                : 'text-slate-200 hover:text-white hover:bg-slate-800/60'
+                ? 'bg-cyan-500 text-slate-950 font-black border-cyan-400 shadow-md shadow-cyan-900/40 ring-2 ring-cyan-300'
+                : 'text-cyan-300 hover:text-white hover:bg-cyan-950/30 border-cyan-500/40 bg-cyan-950/10'
             }`}
           >
-            <span>❄️</span>
+            <Snowflake className="w-4 h-4 text-cyan-400" />
             <span>Atrasômetro</span>
+            <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-cyan-400/20 text-cyan-200 hidden xs:inline">
+              Federal
+            </span>
           </button>
           <button
             onClick={() => setActiveSubTab('bichos')}
@@ -508,27 +511,27 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({
           </div>
         )}
 
-        {/* View 3: Atrasômetro da Federal (Completo, Auditado e Interativo) */}
+        {/* View 3: Atrasômetro da Federal (Completo, Auditado, 100% Responsivo e Interativo) */}
         {activeSubTab === 'atrasometro' && (
           <div className="space-y-4 sm:space-y-5">
             {/* Header & Description */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-2 border-b border-slate-800">
-              <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+              <div className="min-w-0">
                 <h3 className="text-base sm:text-xl font-black text-white flex items-center gap-2">
-                  <Snowflake className="w-5 h-5 text-cyan-400 animate-pulse" />
-                  Atrasômetro Oficial da Loteria Federal
+                  <Snowflake className="w-5 h-5 text-cyan-400 shrink-0 animate-pulse" />
+                  <span>Atrasômetro Oficial da Loteria Federal</span>
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-200 mt-1 font-medium leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-300 mt-1 font-normal leading-relaxed">
                   Mapeamento em tempo real das dezenas, grupos de bichos e finais com maior tempo sem sair.
                   Base auditada dos sorteios oficiais da Caixa Econômica Federal.
                 </p>
               </div>
 
               {/* Action buttons: Copy List & Live Indicator */}
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
                 <button
                   onClick={handleCopyTopList}
-                  className="px-3 py-2 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/40 text-cyan-300 hover:text-white font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
+                  className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/40 text-cyan-300 hover:text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95 min-h-[40px]"
                   title="Copiar lista resumida das maiores defasagens para WhatsApp ou anotações"
                 >
                   {copiedListMessage ? (
@@ -544,104 +547,134 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({
                   )}
                 </button>
 
-                <div className="px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-300 hidden sm:flex items-center gap-1.5">
+                <div className="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-slate-300 flex items-center gap-1.5 shrink-0 min-h-[40px]">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-ping" />
                   <span>Base #{latestContestNum}</span>
                 </div>
               </div>
             </div>
 
-            {/* Quick KPI Overview Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
-              <div className="bg-slate-950/80 border border-cyan-900/40 rounded-xl p-3">
-                <span className="text-[11px] font-bold text-cyan-300 block uppercase tracking-wide">
-                  Dezena Mais Fria
-                </span>
-                <div className="flex items-baseline gap-2 mt-1">
-                  <strong className="text-2xl sm:text-3xl font-black font-mono text-white">
+            {/* Quick KPI Overview Cards - Fully Responsive Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+              <div
+                onClick={() => setAtrasoCategory('dezenas')}
+                className={`bg-slate-950/90 border rounded-xl p-2.5 sm:p-3.5 flex flex-col justify-between transition-all cursor-pointer hover:border-cyan-500/70 active:scale-95 ${
+                  atrasoCategory === 'dezenas' ? 'border-cyan-500/80 ring-1 ring-cyan-500/30' : 'border-slate-800'
+                }`}
+                title="Clique para filtrar por Dezenas"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] sm:text-[11px] font-bold text-cyan-300 uppercase tracking-wide truncate">
+                    Dezena Mais Fria
+                  </span>
+                  <span className="text-[10px] text-cyan-400/80 font-mono">00-99</span>
+                </div>
+                <div className="my-1.5 flex items-baseline gap-1.5 flex-wrap">
+                  <strong className="text-xl xs:text-2xl sm:text-3xl font-black font-mono text-white">
                     {atrasoDezenaStats.maisAtrasadas[0]?.dezena || '--'}
                   </strong>
-                  <span className="text-xs text-slate-300 font-bold">
+                  <span className="text-xs text-slate-300 font-bold truncate">
                     {atrasoDezenaStats.maisAtrasadas[0]?.nomeBicho || ''}
                   </span>
                 </div>
-                <span className="text-[11px] text-cyan-400 font-semibold block mt-0.5">
-                  {atrasoDezenaStats.maisAtrasadas[0]?.concursosAtrasada || 0} concursos sem sair
+                <span className="text-[10px] sm:text-[11px] text-cyan-400 font-semibold block truncate">
+                  {atrasoDezenaStats.maisAtrasadas[0]?.concursosAtrasada || 0} conc. sem sair
                 </span>
               </div>
 
-              <div className="bg-slate-950/80 border border-amber-900/40 rounded-xl p-3">
-                <span className="text-[11px] font-bold text-amber-300 block uppercase tracking-wide">
-                  Bicho Mais Atrasado
-                </span>
-                <div className="flex items-baseline gap-2 mt-1">
-                  <strong className="text-2xl sm:text-3xl font-black text-white">
-                    {atrasoAnimalStats[0]?.emoji} {atrasoAnimalStats[0]?.nome || '--'}
+              <div
+                onClick={() => setAtrasoCategory('bichos')}
+                className={`bg-slate-950/90 border rounded-xl p-2.5 sm:p-3.5 flex flex-col justify-between transition-all cursor-pointer hover:border-amber-500/70 active:scale-95 ${
+                  atrasoCategory === 'bichos' ? 'border-amber-500/80 ring-1 ring-amber-500/30' : 'border-slate-800'
+                }`}
+                title="Clique para filtrar por Bichos"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] sm:text-[11px] font-bold text-amber-300 uppercase tracking-wide truncate">
+                    Bicho Mais Atrasado
+                  </span>
+                  <span className="text-[10px] text-amber-400/80 font-mono">1-25</span>
+                </div>
+                <div className="my-1.5 flex items-baseline gap-1.5 flex-wrap">
+                  <strong className="text-xl xs:text-2xl sm:text-3xl font-black text-white flex items-center gap-1 truncate">
+                    <span>{atrasoAnimalStats[0]?.emoji}</span>
+                    <span className="text-base sm:text-xl">{atrasoAnimalStats[0]?.nome || '--'}</span>
                   </strong>
                 </div>
-                <span className="text-[11px] text-amber-400 font-semibold block mt-0.5">
+                <span className="text-[10px] sm:text-[11px] text-amber-400 font-semibold block truncate">
                   Grupo {String(atrasoAnimalStats[0]?.grupo || 0).padStart(2, '0')} · {atrasoAnimalStats[0]?.concursosAtrasado || 0} conc.
                 </span>
               </div>
 
-              <div className="bg-slate-950/80 border border-emerald-900/40 rounded-xl p-3">
-                <span className="text-[11px] font-bold text-emerald-300 block uppercase tracking-wide">
+              <div className="bg-slate-950/90 border border-slate-800 rounded-xl p-2.5 sm:p-3.5 flex flex-col justify-between">
+                <span className="text-[10px] sm:text-[11px] font-bold text-emerald-300 uppercase tracking-wide truncate">
                   Amostra Caixa
                 </span>
-                <div className="flex items-baseline gap-2 mt-1">
-                  <strong className="text-2xl sm:text-3xl font-black font-mono text-white">
+                <div className="my-1.5 flex items-baseline gap-1.5">
+                  <strong className="text-xl xs:text-2xl sm:text-3xl font-black font-mono text-white">
                     {totalAnalyzed}
                   </strong>
                   <span className="text-xs text-slate-300 font-bold">concursos</span>
                 </div>
-                <span className="text-[11px] text-emerald-400 font-semibold block mt-0.5">
+                <span className="text-[10px] sm:text-[11px] text-emerald-400 font-semibold block truncate">
                   {totalAnalyzed * 5} prêmios auditados
                 </span>
               </div>
 
-              <div className="bg-slate-950/80 border border-rose-900/40 rounded-xl p-3">
-                <span className="text-[11px] font-bold text-rose-300 block uppercase tracking-wide">
-                  Alertas Críticos
-                </span>
-                <div className="flex items-baseline gap-2 mt-1">
-                  <strong className="text-2xl sm:text-3xl font-black font-mono text-rose-400">
+              <div
+                onClick={() => setAtrasoSeverityFilter(atrasoSeverityFilter === 'critico' ? 'all' : 'critico')}
+                className={`bg-slate-950/90 border rounded-xl p-2.5 sm:p-3.5 flex flex-col justify-between transition-all cursor-pointer hover:border-rose-500/70 active:scale-95 ${
+                  atrasoSeverityFilter === 'critico' ? 'border-rose-500 ring-1 ring-rose-500/40 bg-rose-950/20' : 'border-slate-800'
+                }`}
+                title="Clique para filtrar apenas Alertas Críticos"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] sm:text-[11px] font-bold text-rose-300 uppercase tracking-wide truncate">
+                    Alertas Críticos
+                  </span>
+                  <span className="text-[10px] text-rose-400 font-bold">❄️</span>
+                </div>
+                <div className="my-1.5 flex items-baseline gap-1.5">
+                  <strong className="text-xl xs:text-2xl sm:text-3xl font-black font-mono text-rose-400">
                     {atrasoCategory === 'dezenas'
                       ? atrasoDezenaStats.todas.filter(d => getDezenaSeverity(d.concursosAtrasada, atrasoScope).type === 'critico').length
                       : atrasoCategory === 'bichos'
                         ? atrasoAnimalStats.filter(a => getAnimalSeverity(a.concursosAtrasado, atrasoScope).type === 'critico').length
                         : atrasoFinalStats.filter(f => getFinalSeverity(f.concursosAtrasado, atrasoScope).type === 'critico').length}
                   </strong>
-                  <span className="text-xs text-rose-300 font-bold">em alta defasagem</span>
+                  <span className="text-xs text-rose-300 font-bold">em defasagem</span>
                 </div>
-                <span className="text-[11px] text-rose-400/90 font-semibold block mt-0.5">
-                  Pressão estatística de ciclo
+                <span className="text-[10px] sm:text-[11px] text-rose-400/90 font-semibold block truncate">
+                  {atrasoSeverityFilter === 'critico' ? '✓ Filtro ativo' : 'Clique para filtrar'}
                 </span>
               </div>
             </div>
 
-            {/* Controls Bar: Category Selector + Scope Selector (1-5 vs Cabeça) */}
-            <div className="bg-slate-950 p-2 sm:p-3 rounded-2xl border border-slate-800 space-y-3">
+            {/* Controls Bar: Category Selector + Scope Selector + Search + Severity */}
+            <div className="bg-slate-950 p-2.5 sm:p-4 rounded-2xl border border-slate-800 space-y-3">
+              {/* Row 1: Category Switcher and Prize Scope Toggle */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
                 {/* 1. Category Switcher */}
-                <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
+                <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 w-full sm:w-auto">
                   <button
                     onClick={() => {
                       setAtrasoCategory('dezenas');
                       setShowAllDezenas(false);
                     }}
-                    className={`flex-1 sm:flex-none px-3 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                    className={`flex-1 sm:flex-none px-3 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[38px] ${
                       atrasoCategory === 'dezenas'
                         ? 'bg-cyan-500 text-slate-950 font-black shadow-sm'
                         : 'text-slate-300 hover:text-white hover:bg-slate-800'
                     }`}
                   >
                     <span>🔢</span>
-                    <span>Dezenas (00-99)</span>
+                    <span>Dezenas</span>
+                    <span className="text-[10px] opacity-75 hidden xs:inline">(00-99)</span>
                   </button>
 
                   <button
                     onClick={() => setAtrasoCategory('bichos')}
-                    className={`flex-1 sm:flex-none px-3 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                    className={`flex-1 sm:flex-none px-3 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[38px] ${
                       atrasoCategory === 'bichos'
                         ? 'bg-cyan-500 text-slate-950 font-black shadow-sm'
                         : 'text-slate-300 hover:text-white hover:bg-slate-800'
@@ -653,78 +686,73 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({
 
                   <button
                     onClick={() => setAtrasoCategory('finais')}
-                    className={`flex-1 sm:flex-none px-3 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                    className={`flex-1 sm:flex-none px-3 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[38px] ${
                       atrasoCategory === 'finais'
                         ? 'bg-cyan-500 text-slate-950 font-black shadow-sm'
                         : 'text-slate-300 hover:text-white hover:bg-slate-800'
                     }`}
                   >
                     <span>🎯</span>
-                    <span>Finais (0-9)</span>
+                    <span>Finais</span>
+                    <span className="text-[10px] opacity-75 hidden xs:inline">(0-9)</span>
                   </button>
                 </div>
 
                 {/* 2. Prize Scope Toggle (Geral vs Na Cabeça) */}
-                <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 shrink-0">
-                  <span className="text-[11px] font-bold text-slate-400 px-2 hidden xs:inline">Faixa:</span>
+                <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 w-full sm:w-auto shrink-0">
                   <button
                     onClick={() => setAtrasoScope('geral')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    className={`flex-1 sm:flex-none px-3 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer min-h-[38px] text-center ${
                       atrasoScope === 'geral'
                         ? 'bg-emerald-600 text-white font-black shadow-sm'
                         : 'text-slate-300 hover:text-white hover:bg-slate-800'
                     }`}
                     title="Análise em todos os 5 prêmios da Loteria Federal (Cercado)"
                   >
-                    1º ao 5º Prêmio (Geral)
+                    1º ao 5º (Geral)
                   </button>
                   <button
                     onClick={() => setAtrasoScope('cabeca')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    className={`flex-1 sm:flex-none px-3 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer min-h-[38px] text-center ${
                       atrasoScope === 'cabeca'
                         ? 'bg-amber-400 text-slate-950 font-black shadow-sm'
                         : 'text-slate-300 hover:text-white hover:bg-slate-800'
                     }`}
                     title="Análise restrita exclusivamente ao 1º Prêmio (Na Cabeça)"
                   >
-                    1º Prêmio (Na Cabeça)
+                    1º Prêmio (Cabeça)
                   </button>
                 </div>
               </div>
 
-              {/* Search input + Severity Filter Pills */}
+              {/* Row 2: Search input + Severity Filter Pills */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-2 border-t border-slate-900">
-                {/* Search Input */}
-                <div className="relative flex-1">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                {/* Search Input with quick clear */}
+                <div className="relative flex-1 min-w-0">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type="text"
                     value={atrasoSearch}
                     onChange={e => setAtrasoSearch(e.target.value)}
-                    placeholder={
-                      atrasoCategory === 'dezenas'
-                        ? 'Buscar dezena (ex: 74, 92), animal ou grupo...'
-                        : atrasoCategory === 'bichos'
-                          ? 'Buscar animal (ex: Leão, Águia, Urso) ou grupo...'
-                          : 'Buscar dígito final (0 a 9)...'
-                    }
-                    className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 font-medium"
+                    placeholder="Buscar dezena, bicho ou grupo..."
+                    className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 font-medium min-h-[42px]"
                   />
                   {atrasoSearch && (
                     <button
                       onClick={() => setAtrasoSearch('')}
                       className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-white cursor-pointer"
+                      title="Limpar busca"
                     >
-                      <X className="w-3.5 h-3.5" />
+                      <X className="w-4 h-4" />
                     </button>
                   )}
                 </div>
 
-                {/* Severity filters */}
+                {/* Severity filters with horizontal scroll on small devices */}
                 <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1">
                   <button
                     onClick={() => setAtrasoSeverityFilter('all')}
-                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap cursor-pointer transition-all ${
+                    className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap cursor-pointer transition-all min-h-[38px] ${
                       atrasoSeverityFilter === 'all'
                         ? 'bg-slate-200 text-slate-950 font-black'
                         : 'text-slate-300 hover:bg-slate-800'
@@ -734,7 +762,7 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({
                   </button>
                   <button
                     onClick={() => setAtrasoSeverityFilter('critico')}
-                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap cursor-pointer transition-all border ${
+                    className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap cursor-pointer transition-all border min-h-[38px] ${
                       atrasoSeverityFilter === 'critico'
                         ? 'bg-rose-500 text-white font-black border-rose-400'
                         : 'text-rose-300 hover:bg-rose-950/40 border-rose-500/30'
@@ -744,7 +772,7 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({
                   </button>
                   <button
                     onClick={() => setAtrasoSeverityFilter('alto')}
-                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap cursor-pointer transition-all border ${
+                    className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap cursor-pointer transition-all border min-h-[38px] ${
                       atrasoSeverityFilter === 'alto'
                         ? 'bg-amber-400 text-slate-950 font-black border-amber-300'
                         : 'text-amber-300 hover:bg-amber-950/40 border-amber-500/30'
@@ -754,7 +782,7 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({
                   </button>
                   <button
                     onClick={() => setAtrasoSeverityFilter('moderado')}
-                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap cursor-pointer transition-all border ${
+                    className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap cursor-pointer transition-all border min-h-[38px] ${
                       atrasoSeverityFilter === 'moderado'
                         ? 'bg-cyan-500 text-slate-950 font-black border-cyan-400'
                         : 'text-cyan-300 hover:bg-cyan-950/40 border-cyan-500/30'
@@ -764,7 +792,7 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({
                   </button>
                   <button
                     onClick={() => setAtrasoSeverityFilter('recente')}
-                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap cursor-pointer transition-all border ${
+                    className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap cursor-pointer transition-all border min-h-[38px] ${
                       atrasoSeverityFilter === 'recente'
                         ? 'bg-emerald-600 text-white font-black border-emerald-400'
                         : 'text-emerald-300 hover:bg-emerald-950/40 border-emerald-500/30'
@@ -779,12 +807,12 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({
             {/* CATEGORY 1: DEZENAS (00-99) */}
             {atrasoCategory === 'dezenas' && (
               <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs text-slate-300 font-semibold px-1">
+                <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-slate-300 font-semibold px-1">
                   <span>
                     Exibindo {atrasoSearch.trim() || showAllDezenas ? filteredDezenas.length : Math.min(12, filteredDezenas.length)} de {filteredDezenas.length} dezenas
                   </span>
                   <span className="text-cyan-400 font-bold">
-                    {atrasoScope === 'cabeca' ? 'Escopo: 1º Prêmio' : 'Escopo: 1º ao 5º Prêmio'}
+                    {atrasoScope === 'cabeca' ? 'Escopo: 1º Prêmio (Cabeça)' : 'Escopo: 1º ao 5º Prêmio'}
                   </span>
                 </div>
 
@@ -795,13 +823,13 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({
                     <p className="text-xs">Tente buscar por outro número ou alterar o filtro de gravidade.</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
                     {(atrasoSearch.trim() || showAllDezenas ? filteredDezenas : filteredDezenas.slice(0, 12)).map((item, index) => {
                       const severity = getDezenaSeverity(item.concursosAtrasada, atrasoScope);
                       return (
                         <div
                           key={item.dezena}
-                          className={`bg-slate-950/90 border rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between gap-3 transition-all hover:border-cyan-600/70 shadow-md ${
+                          className={`bg-slate-950/90 border rounded-2xl p-3 sm:p-4 flex flex-col justify-between gap-2.5 sm:gap-3 transition-all hover:border-cyan-600/70 shadow-md ${
                             severity.type === 'critico'
                               ? 'border-rose-500/40 bg-rose-950/15'
                               : severity.type === 'alto'
@@ -809,22 +837,22 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({
                                 : 'border-slate-800/90 hover:bg-slate-900/60'
                           }`}
                         >
-                          <div className="flex items-start justify-between gap-3">
-                            {/* Left: Rank + Number badge + Animal Info */}
-                            <div className="flex items-center gap-3">
-                              <span className="w-7 h-7 rounded-full bg-slate-800 text-cyan-300 text-xs font-mono font-black flex items-center justify-center shrink-0">
+                          <div className="flex items-start justify-between gap-2">
+                            {/* Left: Rank + Dezena Box + Animal Info */}
+                            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                              <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-slate-800 text-cyan-300 text-[11px] sm:text-xs font-mono font-black flex items-center justify-center shrink-0">
                                 #{index + 1}
                               </span>
 
-                              <div className="w-13 h-13 rounded-2xl bg-cyan-950/80 border-2 border-cyan-400/60 flex items-center justify-center font-mono text-2xl sm:text-3xl font-black text-cyan-300 shrink-0 shadow-inner">
+                              <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl bg-cyan-950/80 border-2 border-cyan-400/60 flex items-center justify-center font-mono text-xl sm:text-2xl font-black text-cyan-300 shrink-0 shadow-inner">
                                 {item.dezena}
                               </div>
 
-                              <div>
-                                <span className="text-base sm:text-lg font-black text-white block leading-tight">
+                              <div className="min-w-0">
+                                <span className="text-sm sm:text-base font-black text-white block leading-tight truncate">
                                   {item.nomeBicho}
                                 </span>
-                                <span className="text-xs text-slate-300 font-bold">
+                                <span className="text-xs text-slate-300 font-bold block truncate">
                                   Grupo {String(item.grupo).padStart(2, '0')}
                                 </span>
                               </div>
@@ -832,33 +860,33 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({
 
                             {/* Right: Severity Badge + Delay Count */}
                             <div className="text-right shrink-0">
-                              <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-black border uppercase mb-1 ${severity.color}`}>
+                              <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black border uppercase mb-0.5 ${severity.color}`}>
                                 {severity.label}
                               </span>
 
-                              <span className="text-base sm:text-lg font-black font-mono text-white block">
+                              <span className="text-sm sm:text-base font-black font-mono text-white block">
                                 {item.concursosAtrasada === 0
-                                  ? 'Saiu no último!'
+                                  ? 'No último!'
                                   : item.concursosAtrasada === 1
                                     ? '1 concurso'
-                                    : `${item.concursosAtrasada} concursos`}
+                                    : `${item.concursosAtrasada} conc.`}
                               </span>
 
-                              <span className="text-xs text-slate-300 font-semibold block">
+                              <span className="text-[10px] sm:text-xs text-slate-400 font-medium block">
                                 {item.lastSeenContest > 0 && !item.isNeverSeenInSample
-                                  ? `Conc. #${item.lastSeenContest} (${item.lastSeenDate || ''})`
-                                  : `+${totalAnalyzed} conc. (Estimativa histórica)`}
+                                  ? `Conc. #${item.lastSeenContest}`
+                                  : `+${totalAnalyzed} conc.`}
                               </span>
                             </div>
                           </div>
 
-                          {/* Action footer inside card */}
-                          <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2 text-xs">
-                            <span className="text-[11px] text-slate-400 font-medium">
-                              {item.count > 0 ? `${item.count}x na amostra analisada` : 'Sem saída recente'}
+                          {/* Action footer inside card - Responsive layout */}
+                          <div className="pt-2 border-t border-slate-800/80 flex flex-col xs:flex-row xs:items-center justify-between gap-2 text-xs">
+                            <span className="text-[11px] text-slate-400 font-medium truncate">
+                              {item.count > 0 ? `${item.count}x na amostra` : 'Sem saída recente'}
                             </span>
 
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1.5 w-full xs:w-auto">
                               <button
                                 onClick={() =>
                                   handleCopyItem(
@@ -866,7 +894,7 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({
                                     `dez-${item.dezena}`
                                   )
                                 }
-                                className="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-all"
+                                className="flex-1 xs:flex-none px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 active:scale-95 text-slate-300 hover:text-white border border-slate-800 text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer transition-all min-h-[34px]"
                                 title="Copiar informações"
                               >
                                 {copiedId === `dez-${item.dezena}` ? (
@@ -888,7 +916,7 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({
                                     if (onSelectDezena) onSelectDezena(item.dezena);
                                     onNavigateToTab('generator');
                                   }}
-                                  className="px-2.5 py-1 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 hover:text-white border border-emerald-500/40 text-[11px] font-black flex items-center gap-1 cursor-pointer transition-all"
+                                  className="flex-1 xs:flex-none px-2.5 py-1.5 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 active:scale-95 text-emerald-300 hover:text-white border border-emerald-500/40 text-[11px] font-black flex items-center justify-center gap-1 cursor-pointer transition-all min-h-[34px]"
                                   title="Gerar palpite com esta dezena atrasada"
                                 >
                                   <Sparkles className="w-3 h-3 text-amber-300" />
@@ -902,7 +930,7 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({
                                     if (onSelectDezena) onSelectDezena(item.dezena);
                                     onNavigateToTab('milhar');
                                   }}
-                                  className="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-cyan-300 hover:text-white border border-cyan-500/30 text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-all"
+                                  className="flex-1 xs:flex-none px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 active:scale-95 text-cyan-300 hover:text-white border border-cyan-500/30 text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer transition-all min-h-[34px]"
                                   title="Ver estatísticas completas de milhar"
                                 >
                                   <Target className="w-3 h-3 text-cyan-400" />
@@ -922,7 +950,7 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({
                   <div className="text-center pt-2">
                     <button
                       onClick={() => setShowAllDezenas(!showAllDezenas)}
-                      className="px-5 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-900 border border-cyan-500/40 text-cyan-300 hover:text-white font-bold text-xs sm:text-sm inline-flex items-center gap-2 cursor-pointer shadow-md transition-all active:scale-95"
+                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-900 border border-cyan-500/40 text-cyan-300 hover:text-white font-bold text-xs sm:text-sm inline-flex items-center justify-center gap-2 cursor-pointer shadow-md transition-all active:scale-95 min-h-[44px]"
                     >
                       {showAllDezenas ? (
                         <>
@@ -944,7 +972,7 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({
             {/* CATEGORY 2: 25 BICHOS (GRUPOS 01 A 25) */}
             {atrasoCategory === 'bichos' && (
               <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs text-slate-300 font-semibold px-1">
+                <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-slate-300 font-semibold px-1">
                   <span>
                     Exibindo {filteredAnimals.length} de 25 grupos de animais da Federal
                   </span>
@@ -953,13 +981,13 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
                   {filteredAnimals.map((item, index) => {
                     const severity = getAnimalSeverity(item.concursosAtrasado, atrasoScope);
                     return (
                       <div
                         key={item.grupo}
-                        className={`bg-slate-950/90 border rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between gap-3 transition-all hover:border-cyan-600/70 shadow-md ${
+                        className={`bg-slate-950/90 border rounded-2xl p-3 sm:p-4 flex flex-col justify-between gap-2.5 sm:gap-3 transition-all hover:border-cyan-600/70 shadow-md ${
                           severity.type === 'critico'
                             ? 'border-rose-500/40 bg-rose-950/15'
                             : severity.type === 'alto'
@@ -967,56 +995,57 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({
                               : 'border-slate-800/90 hover:bg-slate-900/60'
                         }`}
                       >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-3">
-                            <span className="w-7 h-7 rounded-full bg-slate-800 text-cyan-300 text-xs font-mono font-black flex items-center justify-center shrink-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                            <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-slate-800 text-cyan-300 text-[11px] sm:text-xs font-mono font-black flex items-center justify-center shrink-0">
                               #{index + 1}
                             </span>
 
-                            <div className="text-3xl sm:text-4xl shrink-0 p-1 bg-slate-900/80 rounded-xl border border-slate-800">
+                            <div className="text-2xl sm:text-3xl shrink-0 p-1.5 bg-slate-900/80 rounded-xl border border-slate-800">
                               {item.emoji}
                             </div>
 
-                            <div>
-                              <span className="text-base sm:text-lg font-black text-white block leading-tight">
+                            <div className="min-w-0">
+                              <span className="text-sm sm:text-base font-black text-white block leading-tight truncate">
                                 {item.nome}
                               </span>
-                              <span className="text-xs text-slate-300 font-bold block">
+                              <span className="text-xs text-slate-300 font-bold block truncate">
                                 Grupo {String(item.grupo).padStart(2, '0')}
                               </span>
-                              <span className="text-[11px] font-mono text-cyan-400 font-semibold">
+                              <span className="text-[10px] sm:text-[11px] font-mono text-cyan-400 font-semibold truncate block">
                                 Dez: {item.dezenas.join(' · ')}
                               </span>
                             </div>
                           </div>
 
                           <div className="text-right shrink-0">
-                            <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-black border uppercase mb-1 ${severity.color}`}>
+                            <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black border uppercase mb-0.5 ${severity.color}`}>
                               {severity.label}
                             </span>
 
-                            <span className="text-base sm:text-lg font-black font-mono text-white block">
+                            <span className="text-sm sm:text-base font-black font-mono text-white block">
                               {item.concursosAtrasado === 0
-                                ? 'Saiu no último!'
+                                ? 'No último!'
                                 : item.concursosAtrasado === 1
                                   ? '1 concurso'
-                                  : `${item.concursosAtrasado} concursos`}
+                                  : `${item.concursosAtrasado} conc.`}
                             </span>
 
-                            <span className="text-xs text-slate-300 font-semibold block">
+                            <span className="text-[10px] sm:text-xs text-slate-400 font-medium block">
                               {item.lastSeenContest > 0 && !item.isNeverSeenInSample
-                                ? `Conc. #${item.lastSeenContest} (${item.lastSeenDate})`
-                                : `Sem saída em +${totalAnalyzed} conc.`}
+                                ? `Conc. #${item.lastSeenContest}`
+                                : `+${totalAnalyzed} conc.`}
                             </span>
                           </div>
                         </div>
 
-                        <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2 text-xs">
-                          <span className="text-[11px] text-slate-400 font-medium">
-                            {item.totalHits}x no total ({item.cabecaHits}x na cabeça)
+                        {/* Action footer inside card - Responsive layout */}
+                        <div className="pt-2 border-t border-slate-800/80 flex flex-col xs:flex-row xs:items-center justify-between gap-2 text-xs">
+                          <span className="text-[11px] text-slate-400 font-medium truncate">
+                            {item.totalHits}x total ({item.cabecaHits}x cabeça)
                           </span>
 
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1.5 w-full xs:w-auto">
                             <button
                               onClick={() =>
                                 handleCopyItem(
@@ -1024,7 +1053,7 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({
                                   `bicho-${item.grupo}`
                                 )
                               }
-                              className="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-all"
+                              className="flex-1 xs:flex-none px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 active:scale-95 text-slate-300 hover:text-white border border-slate-800 text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer transition-all min-h-[34px]"
                             >
                               {copiedId === `bicho-${item.grupo}` ? (
                                 <>
@@ -1045,10 +1074,24 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({
                                   if (onSelectDezena) onSelectDezena(item.dezenas[0]);
                                   onNavigateToTab('generator');
                                 }}
-                                className="px-2.5 py-1 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 hover:text-white border border-emerald-500/40 text-[11px] font-black flex items-center gap-1 cursor-pointer transition-all"
+                                className="flex-1 xs:flex-none px-2.5 py-1.5 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 active:scale-95 text-emerald-300 hover:text-white border border-emerald-500/40 text-[11px] font-black flex items-center justify-center gap-1 cursor-pointer transition-all min-h-[34px]"
                               >
                                 <Sparkles className="w-3 h-3 text-amber-300" />
                                 <span>Palpite</span>
+                              </button>
+                            )}
+
+                            {onNavigateToTab && (
+                              <button
+                                onClick={() => {
+                                  if (onSelectDezena) onSelectDezena(item.dezenas[0]);
+                                  onNavigateToTab('milhar');
+                                }}
+                                className="flex-1 xs:flex-none px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 active:scale-95 text-cyan-300 hover:text-white border border-cyan-500/30 text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer transition-all min-h-[34px]"
+                                title="Ver milhares deste animal"
+                              >
+                                <Target className="w-3 h-3 text-cyan-400" />
+                                <span>Milhar</span>
                               </button>
                             )}
                           </div>
@@ -1060,23 +1103,23 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({
               </div>
             )}
 
-            {/* CATEGORY 3: FINAIS (0 A 9) */}
+            {/* CATEGORY 3: FINAIS (0 A 9) - 2 cols on mobile, 3 on sm, 5 on md+ */}
             {atrasoCategory === 'finais' && (
               <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs text-slate-300 font-semibold px-1">
+                <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-slate-300 font-semibold px-1">
                   <span>Exibindo 10 Dígitos Finais (0 a 9) da Loteria Federal</span>
                   <span className="text-cyan-400 font-bold">
-                    {atrasoScope === 'cabeca' ? 'Escopo: 1º Prêmio (Terminação Principal)' : 'Escopo: 1º ao 5º Prêmio'}
+                    {atrasoScope === 'cabeca' ? 'Escopo: 1º Prêmio (Terminação)' : 'Escopo: 1º ao 5º Prêmio'}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 sm:gap-3">
                   {filteredFinals.map((item, index) => {
                     const severity = getFinalSeverity(item.concursosAtrasado, atrasoScope);
                     return (
                       <div
                         key={item.digit}
-                        className={`bg-slate-950/90 border rounded-2xl p-3.5 text-center flex flex-col items-center justify-between gap-2.5 transition-all hover:border-cyan-500 shadow-md ${
+                        className={`bg-slate-950/90 border rounded-2xl p-2.5 sm:p-3.5 text-center flex flex-col items-center justify-between gap-2 transition-all hover:border-cyan-500 shadow-md ${
                           severity.type === 'critico'
                             ? 'border-rose-500/50 bg-rose-950/20'
                             : severity.type === 'alto'
@@ -1085,33 +1128,49 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({
                         }`}
                       >
                         <div className="flex items-center justify-between w-full">
-                          <span className="text-[11px] font-mono font-bold text-slate-400">
+                          <span className="text-[10px] sm:text-[11px] font-mono font-bold text-slate-400">
                             #{index + 1}
                           </span>
-                          <span className={`px-1.5 py-0.2 rounded text-[10px] font-black uppercase border ${severity.color}`}>
+                          <span className={`px-1.5 py-0.2 rounded text-[9px] sm:text-[10px] font-black uppercase border ${severity.color}`}>
                             {severity.label}
                           </span>
                         </div>
 
-                        <div className="w-14 h-14 rounded-2xl bg-cyan-950/80 border-2 border-cyan-400/50 flex items-center justify-center font-mono text-3xl font-black text-cyan-300 shadow-inner my-1">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-cyan-950/80 border-2 border-cyan-400/50 flex items-center justify-center font-mono text-2xl sm:text-3xl font-black text-cyan-300 shadow-inner my-1">
                           {item.digit}
                         </div>
 
                         <div>
-                          <strong className="text-sm font-bold text-white block">
+                          <strong className="text-xs sm:text-sm font-bold text-white block">
                             Final {item.digit}
                           </strong>
-                          <span className="text-xs font-mono font-black text-cyan-300 block">
+                          <span className="text-[11px] sm:text-xs font-mono font-black text-cyan-300 block">
                             {item.concursosAtrasado === 0
-                              ? 'Saiu no último!'
+                              ? 'No último!'
                               : item.concursosAtrasado === 1
                                 ? '1 conc. atrás'
                                 : `${item.concursosAtrasado} conc. atrás`}
                           </span>
                         </div>
 
-                        <div className="w-full pt-2 border-t border-slate-800 text-[11px] text-slate-400">
-                          {item.totalHits}x na amostra
+                        <div className="w-full pt-1.5 border-t border-slate-800 text-[10px] sm:text-[11px] text-slate-400 flex items-center justify-between">
+                          <span>{item.totalHits}x saídas</span>
+                          <button
+                            onClick={() =>
+                              handleCopyItem(
+                                `Final ${item.digit} · Atraso de ${item.concursosAtrasado} concursos na Federal`,
+                                `final-${item.digit}`
+                              )
+                            }
+                            className="p-1 rounded text-slate-400 hover:text-white cursor-pointer"
+                            title="Copiar"
+                          >
+                            {copiedId === `final-${item.digit}` ? (
+                              <Check className="w-3 h-3 text-emerald-400" />
+                            ) : (
+                              <Copy className="w-3 h-3" />
+                            )}
+                          </button>
                         </div>
                       </div>
                     );
@@ -1122,7 +1181,7 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({
 
             {/* Educational & Responsible Gaming Footer */}
             <div className="bg-slate-950/90 border border-slate-800 rounded-2xl p-3.5 sm:p-4 space-y-3">
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-2.5 sm:gap-3">
                 <Info className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
                 <div className="text-xs text-slate-300 leading-relaxed">
                   <strong className="text-white block font-bold mb-0.5">
@@ -1134,21 +1193,21 @@ export const StatsDashboard: React.FC<StatsDashboardProps> = ({
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-800/80">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-3 border-t border-slate-800/80">
                 <span className="text-xs text-slate-400 font-medium">
                   🛡️ Acompanhe o histórico de acertos das dezenas atrasadas:
                 </span>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <button
                     onClick={() => setActiveSubTab('auditoria')}
-                    className="px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs transition-all cursor-pointer whitespace-nowrap active:scale-95 shadow-sm"
+                    className="flex-1 sm:flex-none px-3.5 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black text-xs transition-all cursor-pointer whitespace-nowrap shadow-sm text-center min-h-[38px]"
                   >
                     Ver Auditoria de Acertos →
                   </button>
                   {onNavigateToTab && (
                     <button
                       onClick={() => onNavigateToTab('responsible')}
-                      className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition-all cursor-pointer whitespace-nowrap active:scale-95 shadow-sm"
+                      className="flex-1 sm:flex-none px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-black text-xs transition-all cursor-pointer whitespace-nowrap shadow-sm text-center min-h-[38px]"
                     >
                       Apostas Conscientes (+18)
                     </button>

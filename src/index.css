@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@theme {
+  --breakpoint-xs: 420px;
+}
+
 /* High Visibility Typography & Mobile Ergonomics */
 :root {
   -webkit-font-smoothing: antialiased;

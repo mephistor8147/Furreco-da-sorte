@@ -13,8 +13,8 @@ const cliPort = portArgIndex !== -1 && args[portArgIndex + 1] ? Number(args[port
 const hostArgIndex = args.indexOf('--host');
 const cliHost = hostArgIndex !== -1 && args[hostArgIndex + 1] ? args[hostArgIndex + 1] : null;
 
-const PORT = cliPort || 3000;
-const HOST = cliHost || '0.0.0.0';
+const PORT = Number(process.env.PORT) || cliPort || 3000;
+const HOST = cliHost || process.env.HOST || '0.0.0.0';
 const app = express();
 
 app.use(express.json());

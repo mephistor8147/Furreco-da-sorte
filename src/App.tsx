@@ -304,6 +304,10 @@ export default function App() {
             contests={contests}
             soundEnabled={settings.soundEnabled}
             onPlayChime={() => settings.soundEnabled && playNotificationSound()}
+            targetDezena={targetDezena}
+            onClearTargetDezena={() => setTargetDezena(null)}
+            onNavigateToTab={handleNavigateToTab}
+            onSelectDezena={dez => setTargetDezena(dez)}
           />
         )}
 
@@ -373,6 +377,7 @@ export default function App() {
       <MobileBottomNav
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        statsSubTab={statsSubTab}
         onNavigateWithSubTab={handleNavigateToTab}
         unreadCount={notifications.filter(n => !n.lida).length}
         onOpenNotifications={() => setIsNotifModalOpen(true)}

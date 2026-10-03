@@ -90,7 +90,7 @@ export interface TicketCheckResult {
 export interface SmartBet {
   id: string;
   bilhete: string; // "48291"
-  estrategia: 'quentes' | 'atrasados' | 'equilibrio' | 'surpresinha';
+  estrategia: 'quentes' | 'atrasados' | 'equilibrio' | 'surpresinha' | 'personalizado';
   dataGeracao: string;
   bicho: AnimalInfo;
   motivo: string;

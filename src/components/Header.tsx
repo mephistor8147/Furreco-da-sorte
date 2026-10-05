@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Sparkles, Clock, CheckCircle2, Volume2, VolumeX, Flame, ShieldCheck, Contrast, HelpCircle, RefreshCw, Radio, Snowflake } from 'lucide-react';
+import { Bell, Sparkles, Clock, CheckCircle2, Volume2, VolumeX, Flame, ShieldCheck, Contrast, HelpCircle, RefreshCw, Radio, Snowflake, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { getNextDrawDate } from '../utils/lotteryUtils';
 import { PushNotification, LotteryContest } from '../types/lottery';
 import { NextContestLiveInfo } from '../services/lotteryLiveService';
@@ -27,7 +27,10 @@ interface HeaderProps {
   isLive?: boolean;
   isSyncing?: boolean;
   lastSyncTime?: Date | null;
+  syncError?: string | null;
   onSyncNow?: () => void;
+  onOpenErrorModal?: () => void;
+  onOpenErrorDiagnostic?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -49,7 +52,10 @@ export const Header: React.FC<HeaderProps> = ({
   isLive = true,
   isSyncing = false,
   lastSyncTime,
+  syncError,
   onSyncNow,
+  onOpenErrorModal,
+  onOpenErrorDiagnostic,
 }) => {
   const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number; seconds: number }>({
     hours: 0,
@@ -208,6 +214,17 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className={`w-1.5 h-1.5 rounded-full ${isSyncing ? 'bg-amber-400 animate-ping' : 'bg-emerald-400 animate-pulse'}`} />
                 <span>{isSyncing ? 'Sincronizando' : isLive ? 'Caixa Ao Vivo' : 'Offline'}</span>
               </span>
+
+              {syncError && onOpenErrorModal && (
+                <button
+                  onClick={onOpenErrorModal}
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-bold uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 transition-all cursor-pointer shadow-sm animate-pulse"
+                  title="Clique para ver o relatório e detalhes do erro de conexão"
+                >
+                  <AlertTriangle className="w-2.5 h-2.5 text-rose-400" />
+                  <span>Erro Caixa</span>
+                </button>
+              )}
             </div>
             <div className="flex items-center gap-2 mt-0.5">
               <p className="text-[11px] sm:text-xs text-slate-400 hidden xs:block">
@@ -249,6 +266,18 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <HelpCircle className="w-4 h-4 text-amber-400 shrink-0" />
               <span className="hidden sm:inline text-xs font-bold text-slate-200">Como Usar</span>
+            </button>
+          )}
+
+          {onOpenErrorDiagnostic && (
+            <button
+              onClick={onOpenErrorDiagnostic}
+              className="p-2 sm:px-2.5 sm:py-2 rounded-xl text-slate-300 hover:text-rose-300 hover:bg-slate-800 transition-all border border-slate-700/70 bg-slate-900/60 cursor-pointer min-h-[38px] flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
+              title="Pop-up de Erros & Diagnóstico do Sistema (Simular e testar contingências)"
+              aria-label="Abrir pop-up de erros e diagnóstico"
+            >
+              <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0" />
+              <span className="hidden xl:inline text-xs font-bold text-slate-200">Pop-up de Erros</span>
             </button>
           )}
 

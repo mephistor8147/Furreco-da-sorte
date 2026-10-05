@@ -76,6 +76,33 @@ export function playNotificationSound() {
   }
 }
 
+// Play distinct subtle audio cue for error alerts
+export function playErrorSound() {
+  try {
+    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(329.63, ctx.currentTime); // E4
+    osc.frequency.exponentialRampToValueAtTime(220, ctx.currentTime + 0.18); // A3
+
+    gain.gain.setValueAtTime(0.01, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.35);
+  } catch {
+    // AudioContext blocked or not supported
+  }
+}
+
 export function getStoredNotifications(): PushNotification[] {
   try {
     const data = localStorage.getItem(NOTIFICATIONS_STORAGE_KEY);

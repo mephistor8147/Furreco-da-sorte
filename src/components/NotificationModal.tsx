@@ -1,6 +1,6 @@
 // furreco da sorte
 import React, { useState } from 'react';
-import { Bell, Check, Trash2, X, Volume2, Sparkles, AlertCircle, Clock, Shield, Contrast, Eye, Compass } from 'lucide-react';
+import { Bell, Check, Trash2, X, Volume2, Sparkles, AlertCircle, Clock, Shield, Contrast, Eye, Compass, AlertTriangle } from 'lucide-react';
 import { PushNotification } from '../types/lottery';
 import { NotificationSettings, triggerPushNotification, playNotificationSound } from '../utils/notificationService';
 
@@ -17,6 +17,7 @@ interface NotificationModalProps {
   pushEnabled: boolean;
   onOpenTour?: () => void;
   onNavigateToTab?: (tab: 'stats' | 'history' | 'generator' | 'weekly' | 'odds' | 'responsible' | 'milhar', subTab?: 'finais' | 'dezenas' | 'atrasometro' | 'bichos' | 'auditoria') => void;
+  onTestErrorModal?: () => void;
 }
 
 export const NotificationModal: React.FC<NotificationModalProps> = ({
@@ -32,6 +33,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
   pushEnabled,
   onOpenTour,
   onNavigateToTab,
+  onTestErrorModal,
 }) => {
   const [activeTab, setActiveTab] = useState<'lista' | 'config'>('lista');
 
@@ -414,6 +416,30 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                     className="px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition-colors cursor-pointer shrink-0 ml-2 shadow-sm"
                   >
                     Abrir Tour
+                  </button>
+                </div>
+              )}
+
+              {/* Error Pop-up Diagnostic Section */}
+              {onTestErrorModal && (
+                <div className="pt-2 border-t border-slate-800 flex items-center justify-between p-3 rounded-xl bg-slate-950 border border-slate-800">
+                  <div>
+                    <span className="font-semibold text-white flex items-center gap-1.5 text-xs">
+                      <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
+                      Diagnóstico & Pop-up de Erros
+                    </span>
+                    <span className="text-slate-400 text-[11px] block mt-0.5">
+                      Testar funcionamento do pop-up de erros e contingência
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      onClose();
+                      onTestErrorModal();
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-bold text-xs transition-colors cursor-pointer shrink-0 ml-2 shadow-sm"
+                  >
+                    Testar Pop-up
                   </button>
                 </div>
               )}

@@ -36,6 +36,7 @@ import {
   getTopMilharesFromContests,
   getAnimalByDezena,
 } from '../utils/lotteryUtils';
+import { useAppError } from '../context/ErrorContext';
 
 interface MilharLookupViewProps {
   contests: LotteryContest[];
@@ -68,6 +69,7 @@ export const MilharLookupView: React.FC<MilharLookupViewProps> = ({
   initialMilhar,
   onSelectDezena,
 }) => {
+  const { showError, showToastError } = useAppError();
   const [inputMilhar, setInputMilhar] = useState('8291');
   const [searchedMilhar, setSearchedMilhar] = useState('8291');
   const [copiedNotification, setCopiedNotification] = useState<string | null>(null);
@@ -144,7 +146,32 @@ export const MilharLookupView: React.FC<MilharLookupViewProps> = ({
   // Handle Search Submission
   const handleSearch = (milharToSearch?: string) => {
     const target = milharToSearch !== undefined ? milharToSearch : inputMilhar;
-    const clean = target.replace(/\D/g, '').padStart(4, '0').slice(-4);
+    const raw = target.trim();
+    if (!raw) {
+      showError({
+        title: 'Milhar Não Informada',
+        message: 'Por favor, informe a milhar (0000 a 9999) para consultar seu histórico completo nos sorteios da Loteria Federal.',
+        severity: 'validacao',
+        source: 'Raio-X da Milhar',
+        code: 'ERR_EMPTY_MILHAR',
+      });
+      return;
+    }
+
+    const cleanDigits = raw.replace(/\D/g, '');
+    if (!cleanDigits) {
+      showError({
+        title: 'Entrada Não Numérica',
+        message: 'A consulta de milhar aceita somente dígitos numéricos de 0 a 9.',
+        details: `Valor digitado: "${raw}"\nFormato esperado: 4 dígitos (ex: 8291, 0000).`,
+        severity: 'validacao',
+        source: 'Raio-X da Milhar',
+        code: 'ERR_NON_NUMERIC_MILHAR',
+      });
+      return;
+    }
+
+    const clean = cleanDigits.padStart(4, '0').slice(-4);
     setInputMilhar(clean);
     setSearchedMilhar(clean);
 

@@ -18,13 +18,14 @@ import {
   NotificationSettings,
 } from './utils/notificationService';
 import { PushNotification } from './types/lottery';
-import { Compass } from 'lucide-react';
+import { Compass, ShieldAlert } from 'lucide-react';
 import { ResponsibleGamingCard } from './components/ResponsibleGamingCard';
 import { OnboardingTourModal } from './components/OnboardingTourModal';
 import { MilharLookupView } from './components/MilharLookupView';
 import { useLiveLotteryContests } from './services/lotteryLiveService';
 import { CaixaLiveSyncBanner } from './components/CaixaLiveSyncBanner';
 import { MobileBottomNav } from './components/MobileBottomNav';
+import { useAppError } from './context/ErrorContext';
 
 const ONBOARDING_KEY = 'furreco_onboarding_completed_v1';
 
@@ -188,6 +189,40 @@ export default function App() {
     }
   };
 
+  const { showError, showToastError, showDiagnosticError } = useAppError();
+
+  const handleOpenSyncErrorModal = () => {
+    showError({
+      title: 'Falha de Sincronização com a Caixa',
+      message: syncError || 'Não foi possível contatar os servidores da Caixa Econômica Federal no momento.',
+      details: `Tentativa de conexão com o portal de Loterias Caixa falhou ou excedeu o tempo limite.\nO Furreco ativou a contingência, mantendo a base de ${contests.length} concursos anteriores disponíveis para consulta.`,
+      severity: 'conexao',
+      source: 'Loterias Caixa (Federal)',
+      retryAction: async () => {
+        if (settings.soundEnabled) playNotificationSound();
+        const ok = await syncNow(true);
+        if (ok) {
+          showToastError('Sincronização com a Caixa concluída com sucesso!');
+        }
+      },
+      retryLabel: 'Tentar Sincronizar Novamente',
+    });
+  };
+
+  const handleTestErrorModal = () => {
+    showDiagnosticError('aviso');
+  };
+
+  const handleManualSync = async () => {
+    if (settings.soundEnabled) playNotificationSound();
+    const ok = await syncNow(true);
+    if (!ok && syncError) {
+      handleOpenSyncErrorModal();
+    } else if (ok) {
+      showToastError('Resultados atualizados com sucesso da Caixa Econômica!');
+    }
+  };
+
   return (
     <div className={`min-h-screen flex flex-col selection:bg-emerald-500 selection:text-white ${
       settings.highContrast ? 'high-contrast bg-black text-white' : 'bg-slate-950 text-slate-100'
@@ -212,10 +247,10 @@ export default function App() {
         isLive={isLive}
         isSyncing={isSyncing}
         lastSyncTime={lastSyncTime}
-        onSyncNow={() => {
-          if (settings.soundEnabled) playNotificationSound();
-          syncNow(true);
-        }}
+        syncError={syncError}
+        onOpenErrorModal={handleOpenSyncErrorModal}
+        onOpenErrorDiagnostic={handleTestErrorModal}
+        onSyncNow={handleManualSync}
       />
 
       {/* Main App Content Viewport */}
@@ -259,6 +294,7 @@ export default function App() {
               if (settings.soundEnabled) playNotificationSound();
               syncNow(true);
             }}
+            onOpenErrorModal={handleOpenSyncErrorModal}
             highContrast={settings.highContrast}
           />
         )}
@@ -369,6 +405,15 @@ export default function App() {
             >
               Apostas Conscientes (+18)
             </button>
+            <span>·</span>
+            <button
+              onClick={handleTestErrorModal}
+              className="text-rose-400 hover:text-rose-300 font-semibold transition-colors cursor-pointer flex items-center gap-1"
+              title="Abrir o pop-up de erros e testar contingência"
+            >
+              <ShieldAlert className="w-3.5 h-3.5" />
+              Pop-up de Erros
+            </button>
           </div>
         </div>
       </footer>
@@ -398,6 +443,7 @@ export default function App() {
         pushEnabled={pushEnabled}
         onOpenTour={handleOpenTour}
         onNavigateToTab={handleNavigateToTab}
+        onTestErrorModal={handleTestErrorModal}
       />
 
       {/* Interactive Onboarding Tour Modal */}

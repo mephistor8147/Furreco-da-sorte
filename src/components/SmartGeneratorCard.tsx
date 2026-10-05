@@ -21,10 +21,12 @@ import {
   Calculator,
   ArrowRight,
   TrendingUp,
+  ShieldAlert,
 } from 'lucide-react';
 import { LotteryContest, SmartBet, AnimalInfo } from '../types/lottery';
 import { getAnimalByDezena, formatTicket } from '../utils/lotteryUtils';
 import { calculateDezenaStats, calculateFinalDigitStats } from '../data/mockLotteryData';
+import { useAppError } from '../context/ErrorContext';
 
 interface SmartGeneratorCardProps {
   contests: LotteryContest[];
@@ -73,6 +75,7 @@ export const SmartGeneratorCard: React.FC<SmartGeneratorCardProps> = ({
   onNavigateToTab,
   onSelectDezena,
 }) => {
+  const { showError, showToastError, showDiagnosticError } = useAppError();
   const [strategy, setStrategy] = useState<'quentes' | 'atrasados' | 'equilibrio' | 'surpresinha'>('quentes');
   const [isGenerating, setIsGenerating] = useState(false);
   const [displayDigits, setDisplayDigits] = useState<string[]>(['4', '8', '2', '9', '1']);
@@ -103,8 +106,16 @@ export const SmartGeneratorCard: React.FC<SmartGeneratorCardProps> = ({
     setSavedBets(bets);
     try {
       localStorage.setItem(SAVED_BETS_KEY, JSON.stringify(bets));
-    } catch {
-      // ignore
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Falha desconhecida de armazenamento';
+      showError({
+        title: 'Falha no Armazenamento Local',
+        message: 'Não foi possível salvar o bilhete no dispositivo. O armazenamento do navegador pode estar cheio.',
+        details: `${msg}\nChave: ${SAVED_BETS_KEY}`,
+        severity: 'critico',
+        source: 'Armazenamento do Navegador',
+        code: 'ERR_STORAGE_FULL',
+      });
     }
   };
 
@@ -264,14 +275,26 @@ export const SmartGeneratorCard: React.FC<SmartGeneratorCardProps> = ({
     generateTicket();
   }, [targetDezena]);
 
-  const handleCopy = () => {
+  const handleCopy = async () => {
     if (!currentBet) return;
-    navigator.clipboard.writeText(formatTicket(currentBet.bilhete));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(formatTicket(currentBet.bilhete));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Falha na API de Clipboard';
+      showError({
+        title: 'Falha na Área de Transferência',
+        message: 'O navegador bloqueou a cópia automática do bilhete.',
+        details: `${msg}\nBilhete: ${currentBet.bilhete}`,
+        severity: 'validacao',
+        source: 'Área de Transferência',
+        code: 'ERR_CLIPBOARD_FAILED',
+      });
+    }
   };
 
-  const handleShareWhatsApp = () => {
+  const handleShareWhatsApp = async () => {
     if (!currentBet) return;
     const msg = `🍀 *PALPITE DO FURRECO DA SORTE*\n` +
       `🎟️ *Bilhete:* ${formatTicket(currentBet.bilhete)}\n` +
@@ -282,19 +305,49 @@ export const SmartGeneratorCard: React.FC<SmartGeneratorCardProps> = ({
       `💡 *Por quê?* ${currentBet.motivo}\n\n` +
       `Consulte estatísticas completas e o Atrasômetro no Furreco da Sorte!`;
 
-    navigator.clipboard.writeText(msg);
-    setSharedWhatsApp(true);
-    setTimeout(() => setSharedWhatsApp(false), 2500);
+    try {
+      await navigator.clipboard.writeText(msg);
+      setSharedWhatsApp(true);
+      setTimeout(() => setSharedWhatsApp(false), 2500);
+    } catch {
+      // ignore
+    }
 
-    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
-    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+    try {
+      const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+      window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Bloqueio de pop-up';
+      showError({
+        title: 'Bloqueio de Janela Externa',
+        message: 'O navegador impediu a abertura automática da janela do WhatsApp. O texto completo do palpite foi copiado para sua área de transferência para colar diretamente!',
+        details: `${msg}\nURL: https://api.whatsapp.com`,
+        severity: 'aviso',
+        source: 'WhatsApp',
+        code: 'ERR_POPUP_BLOCKED',
+      });
+    }
   };
 
   const handleSaveBet = () => {
     if (!currentBet) return;
-    if (savedBets.some(b => b.bilhete === currentBet.bilhete)) return;
+    if (savedBets.some(b => b.bilhete === currentBet.bilhete)) {
+      showError({
+        title: 'Palpite Já Salvo nos Favoritos',
+        message: `O bilhete ${formatTicket(currentBet.bilhete)} já está salvo na sua lista de palpites.`,
+        details: `Bilhete: ${currentBet.bilhete}\nEstratégia: ${currentBet.estrategia.toUpperCase()}\nBicho: ${currentBet.bicho.nome} ${currentBet.bicho.emoji} (Grupo ${String(currentBet.bicho.grupo).padStart(2, '0')})\nNão é necessário salvá-lo em duplicidade.`,
+        severity: 'aviso',
+        source: 'Gerador de Palpites',
+        code: 'ERR_DUPLICATE_BET',
+      });
+      return;
+    }
     const updated = [currentBet, ...savedBets];
     saveBetsToStorage(updated);
+    showToastError(`Bilhete ${formatTicket(currentBet.bilhete)} salvo com sucesso!`, {
+      title: 'Palpite Salvo',
+      severity: 'aviso',
+    });
   };
 
   const handleDeleteSaved = (id: string) => {
@@ -335,13 +388,17 @@ export const SmartGeneratorCard: React.FC<SmartGeneratorCardProps> = ({
     if (onNavigateToTab) onNavigateToTab('milhar');
   };
 
-  const handleCopyModalityText = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedModality(id);
-    setTimeout(() => setCopiedModality(null), 2000);
+  const handleCopyModalityText = async (text: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedModality(id);
+      setTimeout(() => setCopiedModality(null), 2000);
+    } catch {
+      showToastError('Não foi possível copiar o texto da modalidade.');
+    }
   };
 
-  const handleCopyAllModalities = () => {
+  const handleCopyAllModalities = async () => {
     if (!hotModalities) return;
     const text = `🍀 *PALPITES QUENTES POR MODALIDADE - FURRECO DA SORTE*\n` +
       `📅 Sorteios Oficiais da Loteria Federal (Caixa)\n\n` +
@@ -369,14 +426,37 @@ export const SmartGeneratorCard: React.FC<SmartGeneratorCardProps> = ({
       `   💰 Retorno: ~3.000x a 5.000x\n\n` +
       `Consulte estatísticas auditadas em tempo real no Furreco da Sorte!`;
 
-    navigator.clipboard.writeText(text);
-    setCopiedAllModalities(true);
-    setTimeout(() => setCopiedAllModalities(false), 2500);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedAllModalities(true);
+      setTimeout(() => setCopiedAllModalities(false), 2500);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Falha na cópia';
+      showError({
+        title: 'Falha na Área de Transferência',
+        message: 'Não foi possível copiar as modalidades para a área de transferência.',
+        details: msg,
+        severity: 'validacao',
+        source: 'Área de Transferência',
+        code: 'ERR_CLIPBOARD_WRITE',
+      });
+    }
   };
 
   // Test current bet against past contests in memory
   const testAgainstPastContests = () => {
     if (!currentBet) return;
+    if (contests.length === 0) {
+      showError({
+        title: 'Nenhum Concurso em Memória',
+        message: 'Não há concursos da Loteria Federal carregados para testar o bilhete contra o histórico.',
+        details: 'A base local de concursos está vazia. Verifique a conexão com a Caixa e tente sincronizar novamente.',
+        severity: 'conexao',
+        source: 'Auditoria de Acertos',
+        code: 'ERR_NO_CONTESTS_DATA',
+      });
+      return;
+    }
     const hits: Array<{ contestNum: number; date: string; prizeType: string; matched: string; prizeValue: number }> = [];
 
     contests.forEach(c => {
@@ -444,10 +524,20 @@ export const SmartGeneratorCard: React.FC<SmartGeneratorCardProps> = ({
           {/* Header */}
           <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
             <div>
-              <span className="text-[11px] sm:text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                Inteligência Estatística Recente
-              </span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[11px] sm:text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  Inteligência Estatística Recente
+                </span>
+                <button
+                  onClick={() => showDiagnosticError('aviso')}
+                  className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-300 hover:text-white bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 px-2 py-0.5 rounded-full cursor-pointer transition-colors active:scale-95 shadow-sm"
+                  title="Abrir o pop-up de erros para testar diagnóstico e contingência"
+                >
+                  <ShieldAlert className="w-3 h-3 text-rose-400" />
+                  <span>Pop-up de Erros</span>
+                </button>
+              </div>
               <h2 className="text-lg sm:text-2xl font-black text-white mt-0.5 sm:mt-1">
                 Gerador de Palpites do Furreco
               </h2>
@@ -635,13 +725,12 @@ export const SmartGeneratorCard: React.FC<SmartGeneratorCardProps> = ({
 
                 <button
                   onClick={handleSaveBet}
-                  disabled={isSaved}
                   className={`py-2.5 px-2 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-1.5 border cursor-pointer min-h-[42px] active:scale-95 ${
                     isSaved
                       ? 'bg-emerald-950/50 text-emerald-400 border-emerald-500/40'
                       : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
                   }`}
-                  title={isSaved ? 'Este palpite já está salvo na sua lista' : 'Salvar este palpite na lista local'}
+                  title={isSaved ? 'Este palpite já está salvo nos favoritos (clique para ver detalhes)' : 'Salvar este palpite na lista local'}
                 >
                   <Bookmark className="w-3.5 h-3.5" />
                   <span>{isSaved ? 'Salvo ✓' : 'Salvar'}</span>

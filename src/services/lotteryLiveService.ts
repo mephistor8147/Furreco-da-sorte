@@ -23,7 +23,7 @@ export interface LiveLotteryState {
   latestConcursoNumber: number;
   latestContest: LotteryContest | undefined;
   proximoConcurso: NextContestLiveInfo | null;
-  syncNow: (force?: boolean) => Promise<void>;
+  syncNow: (force?: boolean) => Promise<boolean>;
 }
 
 // Load cached contests from localStorage if available
@@ -99,6 +99,7 @@ export function useLiveLotteryContests(): LiveLotteryState {
         } catch {
           // ignore localStorage errors
         }
+        return true;
       } else {
         throw new Error(data.error || 'Dados da Caixa indisponíveis no momento');
       }
@@ -109,6 +110,7 @@ export function useLiveLotteryContests(): LiveLotteryState {
       if (contests.length === 0) {
         setContests(FALLBACK_CONTESTS);
       }
+      return false;
     } finally {
       setIsSyncing(false);
       setIsLoading(false);

@@ -10,6 +10,7 @@ interface CaixaLiveSyncBannerProps {
   syncError: string | null;
   latestContest?: LotteryContest;
   onSync: () => void;
+  onOpenErrorModal?: () => void;
   highContrast?: boolean;
 }
 
@@ -20,6 +21,7 @@ export const CaixaLiveSyncBanner: React.FC<CaixaLiveSyncBannerProps> = ({
   syncError,
   latestContest,
   onSync,
+  onOpenErrorModal,
   highContrast,
 }) => {
   const [justSynced, setJustSynced] = useState(false);
@@ -89,10 +91,21 @@ export const CaixaLiveSyncBanner: React.FC<CaixaLiveSyncBannerProps> = ({
               {isSyncing ? 'Buscando na Caixa...' : `Atualizado às ${formatLastSync(lastSyncTime)}`}
             </span>
             {syncError ? (
-              <span className="text-amber-400 text-[10px] flex items-center gap-1">
-                <AlertTriangle className="w-3 h-3 shrink-0" />
-                Modo contingência
-              </span>
+              <div className="flex items-center justify-end gap-2">
+                <span className="text-amber-400 text-[10px] flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3 shrink-0" />
+                  Modo contingência
+                </span>
+                {onOpenErrorModal && (
+                  <button
+                    onClick={onOpenErrorModal}
+                    className="text-[10px] font-bold text-rose-300 hover:text-white underline cursor-pointer"
+                    title="Abrir pop-up com detalhes deste erro"
+                  >
+                    Ver Erro
+                  </button>
+                )}
+              </div>
             ) : (
               <span className="text-emerald-400 text-[10px] flex items-center gap-1">
                 <CheckCircle2 className="w-3 h-3" />

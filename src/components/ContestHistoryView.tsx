@@ -4,6 +4,7 @@ import confetti from 'canvas-confetti';
 import { Search, Filter, CheckCircle, Award, Calendar, Sparkles, X } from 'lucide-react';
 import { LotteryContest, TicketCheckResult } from '../types/lottery';
 import { formatTicket, formatCurrency, checkTicketAgainstContest, ANIMAL_GROUPS } from '../utils/lotteryUtils';
+import { useAppError } from '../context/ErrorContext';
 
 interface ContestHistoryViewProps {
   contests: LotteryContest[];
@@ -16,6 +17,7 @@ export const ContestHistoryView: React.FC<ContestHistoryViewProps> = ({
   onPlayChime,
   onNavigateToTab,
 }) => {
+  const { showError, showToastError } = useAppError();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'exact' | 'milhar' | 'centena' | 'dezena' | 'final'>('all');
   const [animalFilter, setAnimalFilter] = useState<number | null>(null);
@@ -65,13 +67,54 @@ export const ContestHistoryView: React.FC<ContestHistoryViewProps> = ({
   // Run user ticket check across all recent contests
   const handleCheckUserTicket = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!checkerTicket.trim()) return;
+    const raw = checkerTicket.trim();
+    if (!raw) {
+      showError({
+        title: 'Número do Bilhete Ausente',
+        message: 'Por favor, digite o número do seu bilhete da Loteria Federal para realizar a conferência.',
+        severity: 'validacao',
+        source: 'Verificador de Prêmios',
+        code: 'ERR_EMPTY_TICKET',
+      });
+      return;
+    }
 
+    const clean = raw.replace(/\D/g, '');
+    if (!clean) {
+      showError({
+        title: 'Formato de Bilhete Inválido',
+        message: 'O bilhete deve conter apenas algarismos numéricos (0 a 9). Letras e símbolos não são aceitos.',
+        details: `Valor digitado: "${raw}"\nFormato requerido: ^[0-9]{5}$`,
+        severity: 'validacao',
+        source: 'Verificador de Prêmios',
+        code: 'ERR_NON_NUMERIC_TICKET',
+      });
+      return;
+    }
+
+    if (clean.length < 5) {
+      const padded = clean.padStart(5, '0');
+      showError({
+        title: 'Bilhete com Dígitos Incompletos',
+        message: `O número "${clean}" contém apenas ${clean.length} dígitos. Os bilhetes da Loteria Federal possuem exatamente 5 algarismos (00000 a 99999).`,
+        details: `Valor digitado: ${clean}\nEsperado: 5 algarismos numéricos.\nSugestão: Complete os algarismos à esquerda (ex: "${padded}").`,
+        severity: 'validacao',
+        source: 'Verificador de Prêmios',
+        code: 'ERR_SHORT_TICKET',
+        retryAction: () => {
+          setCheckerTicket(padded);
+        },
+        retryLabel: `Autocompletar como ${padded}`,
+      });
+      return;
+    }
+
+    const ticketToVerify = clean.slice(-5);
     if (onPlayChime) onPlayChime();
 
     const results: TicketCheckResult[] = [];
     contests.forEach(contest => {
-      const res = checkTicketAgainstContest(checkerTicket, contest);
+      const res = checkTicketAgainstContest(ticketToVerify, contest);
       if (res.hasWon) {
         results.push(res);
       }

@@ -4,6 +4,29 @@ import { getAnimalByDezena, ANIMAL_GROUPS } from '../utils/lotteryUtils';
 // Concursos recentes da Loteria Federal
 export const LOTTERY_CONTESTS: LotteryContest[] = [
   {
+    concurso: 6106,
+    data: '03/10/2026',
+    diaSemana: 'Sábado',
+    local: 'Espaço da Sorte, São Paulo, SP',
+    acumulou: false,
+    arrecadacaoTotal: 4200000,
+    premios: [
+      { ordem: 1, bilhete: '17469', valorPremio: 500000 },
+      { ordem: 2, bilhete: '81210', valorPremio: 35000 },
+      { ordem: 3, bilhete: '07767', valorPremio: 30000 },
+      { ordem: 4, bilhete: '41317', valorPremio: 25000 },
+      { ordem: 5, bilhete: '79412', valorPremio: 20503 },
+    ],
+    bichoPrincipal: getAnimalByDezena('69'),
+    todosBichos: [
+      getAnimalByDezena('69'),
+      getAnimalByDezena('10'),
+      getAnimalByDezena('67'),
+      getAnimalByDezena('17'),
+      getAnimalByDezena('12'),
+    ],
+  },
+  {
     concurso: 6105,
     data: '30/09/2026',
     diaSemana: 'Quarta-feira',

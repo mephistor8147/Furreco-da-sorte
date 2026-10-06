@@ -5,6 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { fetchLiveFederalContests } from './src/services/caixaFetcher';
 import { parseCaixaContest, parseMirrorContest } from './src/services/caixaParser';
+import { generateGeminiSmartBet } from './src/services/geminiBetService';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,7 +25,7 @@ app.use(express.json());
 // Enable CORS for all routes (facilitates Vercel, previews, and local integrations)
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
   if (req.method === 'OPTIONS') {
     res.status(204).end();
@@ -65,7 +66,7 @@ app.get('/api/loterias/federal/latest', async (req: Request, res: Response) => {
 
 app.get('/api/loterias/federal/recent', async (req: Request, res: Response) => {
   try {
-    const count = Math.min(Math.max(parseInt(req.query.count as string, 10) || 20, 1), 50);
+    const count = Math.min(Math.max(parseInt(req.query.count as string, 10) || 20, 1), 100);
     const force = req.query.force === 'true';
 
     const result = await fetchLiveFederalContests(count, force);
@@ -81,8 +82,35 @@ app.get('/api/loterias/federal/recent', async (req: Request, res: Response) => {
       contests: result.contests,
     });
   } catch (e: any) {
-    const count = Math.min(Math.max(parseInt(req.query.count as string, 10) || 20, 1), 50);
+    const count = Math.min(Math.max(parseInt(req.query.count as string, 10) || 20, 1), 100);
     const fallback = await fetchLiveFederalContests(count, false);
+    res.json(fallback);
+  }
+});
+
+app.post('/api/gemini/smart-bet', async (req: Request, res: Response) => {
+  try {
+    let sampleSize: 20 | 50 | 100 = 50;
+    const requested = parseInt(req.body?.sampleSize || (req.query?.sampleSize as string), 10);
+    if (requested === 20 || requested === 50 || requested === 100) {
+      sampleSize = requested;
+    }
+
+    let contests = Array.isArray(req.body?.contests) && req.body.contests.length > 0
+      ? req.body.contests
+      : [];
+
+    if (contests.length < sampleSize) {
+      const liveData = await fetchLiveFederalContests(sampleSize, false);
+      contests = liveData.contests;
+    }
+
+    const result = await generateGeminiSmartBet(sampleSize, contests);
+    res.json(result);
+  } catch (err: any) {
+    console.error('[Gemini Route Error]:', err.message);
+    const liveData = await fetchLiveFederalContests(50, false);
+    const fallback = await generateGeminiSmartBet(50, liveData.contests);
     res.json(fallback);
   }
 });

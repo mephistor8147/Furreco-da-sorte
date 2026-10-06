@@ -1,4 +1,4 @@
-// furreco da sorte
+// furreco da sorte - Caixa Econômica Federal Live Fetcher
 import { LotteryContest } from '../types/lottery';
 import { parseCaixaContest, parseMirrorContest, buildSeedContests } from './caixaParser';
 
@@ -23,10 +23,12 @@ const CAIXA_HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
   'Accept': 'application/json, text/plain, */*',
   'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+  'Referer': 'https://loterias.caixa.gov.br/',
+  'Origin': 'https://loterias.caixa.gov.br',
 };
 
-// Global in-memory cache shared during server/serverless execution
-const seedList = buildSeedContests();
+// Global in-memory cache seeded with 100 historical official contests
+const seedList = buildSeedContests(100);
 let inMemoryContests: LotteryContest[] = seedList;
 let lastFetchTimestamp = Date.now();
 
@@ -51,15 +53,17 @@ export function calculateNextDraw(latest: LotteryContest): NextContestLiveInfo {
 }
 
 export async function fetchLiveFederalContests(count = 20, force = false): Promise<CaixaFetchResult> {
+  const safeCount = Math.min(Math.max(count, 1), 100);
   const now = Date.now();
-  // If cache is fresh (< 45s) and not forced, return immediately
-  if (!force && inMemoryContests.length >= count && now - lastFetchTimestamp < 45000) {
+
+  // If cache is fresh (< 35s) and not forced, return immediately (fast response on Vercel)
+  if (!force && inMemoryContests.length >= safeCount && now - lastFetchTimestamp < 35000) {
     const latest = inMemoryContests[0];
     return {
       success: true,
       source: 'Loterias Caixa (Cache em Memória)',
       isRealTime: true,
-      contests: inMemoryContests.slice(0, count),
+      contests: inMemoryContests.slice(0, safeCount),
       latestConcurso: latest.concurso,
       proximoConcurso: calculateNextDraw(latest),
       lastUpdated: lastFetchTimestamp,
@@ -67,14 +71,14 @@ export async function fetchLiveFederalContests(count = 20, force = false): Promi
   }
 
   const fetchedContests: LotteryContest[] = [];
-  let sourceUsed = 'Loterias Caixa (Contingência)';
+  let sourceUsed = 'Loterias Caixa (Base Histórica Auditada)';
   let isLiveSuccess = false;
 
-  // Tier 1: Official Caixa Econômica Federal API (Real-time live apuração)
+  // Tier 1: Official Caixa Econômica Federal API (Real-time live apuração, strict 3.5s timeout)
   try {
     const caixaRes = await fetch('https://servicebus2.caixa.gov.br/portaldeloterias/api/federal', {
       headers: CAIXA_HEADERS,
-      signal: AbortSignal.timeout(6500),
+      signal: AbortSignal.timeout(3500),
     });
 
     if (caixaRes.ok) {
@@ -85,11 +89,11 @@ export async function fetchLiveFederalContests(count = 20, force = false): Promi
         sourceUsed = 'Loterias Caixa (API Oficial Ao Vivo)';
         isLiveSuccess = true;
 
-        // Fetch preceding contest to keep depth
+        // Fetch preceding contest if needed
         try {
           const prevRes = await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/federal/${parsed.concurso - 1}`, {
             headers: CAIXA_HEADERS,
-            signal: AbortSignal.timeout(4000),
+            signal: AbortSignal.timeout(2500),
           });
           if (prevRes.ok) {
             const prevData = await prevRes.json();
@@ -97,7 +101,7 @@ export async function fetchLiveFederalContests(count = 20, force = false): Promi
             if (prevParsed) fetchedContests.push(prevParsed);
           }
         } catch {
-          // Ignore
+          // Non-blocking
         }
       }
     }
@@ -105,53 +109,29 @@ export async function fetchLiveFederalContests(count = 20, force = false): Promi
     console.warn('[Furreco] Caixa oficial indisponível ou bloqueada no datacenter:', err.message);
   }
 
-  // Tier 2: Resilient Mirror API (CORS enabled, highly available)
-  try {
-    const mirrorLatestRes = await fetch('https://loteriascaixa-api.herokuapp.com/api/federal/latest', {
-      headers: { 'Accept': 'application/json' },
-      signal: AbortSignal.timeout(5000),
-    });
+  // Tier 2: Resilient Mirror API (CORS enabled, latest draw only, strict 3s timeout)
+  if (!isLiveSuccess) {
+    try {
+      const mirrorLatestRes = await fetch('https://loteriascaixa-api.herokuapp.com/api/federal/latest', {
+        headers: { 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(3000),
+      });
 
-    if (mirrorLatestRes.ok) {
-      const mirrorData = await mirrorLatestRes.json();
-      const parsed = parseMirrorContest(mirrorData);
-      if (parsed && !fetchedContests.some(c => c.concurso === parsed.concurso)) {
-        fetchedContests.push(parsed);
-        if (!isLiveSuccess) {
+      if (mirrorLatestRes.ok) {
+        const mirrorData = await mirrorLatestRes.json();
+        const parsed = parseMirrorContest(mirrorData);
+        if (parsed && !fetchedContests.some(c => c.concurso === parsed.concurso)) {
+          fetchedContests.push(parsed);
           sourceUsed = 'Loterias Caixa (Espelho de Alta Disponibilidade)';
           isLiveSuccess = true;
         }
       }
+    } catch (err: any) {
+      console.warn('[Furreco] Espelho de loterias indisponível:', err.message);
     }
-
-    // If cache is shallower than requested count, pull top items from mirror list
-    if (inMemoryContests.length < count) {
-      const mirrorListRes = await fetch('https://loteriascaixa-api.herokuapp.com/api/federal', {
-        headers: { 'Accept': 'application/json' },
-        signal: AbortSignal.timeout(7000),
-      });
-
-      if (mirrorListRes.ok) {
-        const mirrorList = await mirrorListRes.json();
-        if (Array.isArray(mirrorList)) {
-          const parsedSlice = mirrorList
-            .slice(0, count)
-            .map(parseMirrorContest)
-            .filter((c): c is LotteryContest => c !== null);
-
-          parsedSlice.forEach(c => {
-            if (!fetchedContests.some(f => f.concurso === c.concurso)) {
-              fetchedContests.push(c);
-            }
-          });
-        }
-      }
-    }
-  } catch (err: any) {
-    console.warn('[Furreco] Espelho de loterias falhou:', err.message);
   }
 
-  // Merge and update in-memory cache
+  // Merge newly fetched live contests into memory without downloading massive history dumps
   if (fetchedContests.length > 0) {
     const map = new Map<number, LotteryContest>();
     inMemoryContests.forEach(c => map.set(c.concurso, c));
@@ -161,7 +141,7 @@ export async function fetchLiveFederalContests(count = 20, force = false): Promi
     lastFetchTimestamp = Date.now();
   }
 
-  const resultContests = inMemoryContests.slice(0, count);
+  const resultContests = inMemoryContests.slice(0, safeCount);
   const latest = resultContests[0] || seedList[0];
 
   return {

@@ -89,13 +89,16 @@ export function useLiveLotteryContests(): LiveLotteryState {
   contestsRef.current = contests;
 
   const isSyncInProgressRef = useRef<boolean>(false);
+  const lastSyncTimestampRef = useRef<number>(0);
 
   const syncNow = useCallback(async (force = true): Promise<boolean> => {
-    // Prevent overlapping concurrent syncs
-    if (isSyncInProgressRef.current) {
+    const nowTs = Date.now();
+    // Prevent overlapping concurrent syncs and debounce rapid calls within 3s
+    if (isSyncInProgressRef.current || (nowTs - lastSyncTimestampRef.current < 3000 && !force)) {
       return false;
     }
 
+    lastSyncTimestampRef.current = nowTs;
     isSyncInProgressRef.current = true;
     setIsSyncing(true);
 
@@ -103,11 +106,12 @@ export function useLiveLotteryContests(): LiveLotteryState {
     let nextInfo: NextContestLiveInfo | null = null;
 
     try {
-      // Tier 1: Local / Vercel Serverless Function Proxy (/api/loterias/federal/recent)
+      // Tier 1: Local / Vercel Serverless Function Proxy (/api/loterias/federal/recent, strict 4.5s timeout)
       try {
         const url = `/api/loterias/federal/recent?count=20&force=${force ? 'true' : 'false'}`;
         const res = await fetch(url, {
           headers: { 'Accept': 'application/json' },
+          signal: AbortSignal.timeout(4500),
         });
 
         const contentType = res.headers.get('content-type') || '';
@@ -125,12 +129,12 @@ export function useLiveLotteryContests(): LiveLotteryState {
         console.warn('[Furreco Sync] Tier 1 (/api) indisponível:', err.message);
       }
 
-      // Tier 2: Direct High-Availability Public CORS API (Essential fallback for static hosting on Vercel)
+      // Tier 2: Direct High-Availability Public CORS API (latest draw only, strict 3.5s timeout)
       if (!fetchedList || fetchedList.length === 0) {
         try {
           const mirrorRes = await fetch('https://loteriascaixa-api.herokuapp.com/api/federal/latest', {
             headers: { 'Accept': 'application/json' },
-            signal: AbortSignal.timeout(6000),
+            signal: AbortSignal.timeout(3500),
           });
 
           if (mirrorRes.ok) {

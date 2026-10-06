@@ -15,7 +15,7 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const count = Math.min(Math.max(parseInt(req.query?.count, 10) || 20, 1), 50);
+    const count = Math.min(Math.max(parseInt(req.query?.count, 10) || 20, 1), 100);
     const force = req.query?.force === 'true';
 
     const result = await fetchLiveFederalContests(count, force);

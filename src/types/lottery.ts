@@ -90,12 +90,44 @@ export interface TicketCheckResult {
 export interface SmartBet {
   id: string;
   bilhete: string; // "48291"
-  estrategia: 'quentes' | 'atrasados' | 'equilibrio' | 'surpresinha' | 'personalizado';
+  estrategia: 'quentes' | 'atrasados' | 'equilibrio' | 'surpresinha' | 'personalizado' | 'ia-gemini';
   dataGeracao: string;
   bicho: AnimalInfo;
   motivo: string;
   probabilidadeTeorica: string;
   favorito?: boolean;
+  geminiAnalysis?: {
+    sampleSize: 20 | 50 | 100;
+    confiancaPercentual: number;
+    destaques: string[];
+    duqueSugerido?: string[];
+    ternoSugerido?: string[];
+    source: 'gemini-api' | 'statistical-engine';
+  };
+}
+
+export interface GeminiSmartBetResult {
+  success: boolean;
+  source: 'gemini-api' | 'statistical-engine';
+  sampleSize: 20 | 50 | 100;
+  contestsAnalyzedCount: number;
+  bilhete: string;
+  milhar: string;
+  centena: string;
+  dezena: string;
+  animal: AnimalInfo;
+  razaoEstatistica: string;
+  confiancaPercentual: number;
+  destaques: string[];
+  duqueSugerido: string[];
+  ternoSugerido: string[];
+  metricasAmostra?: {
+    topDezenas: { dezena: string; ocorrencias: number }[];
+    topFinais: { final: number; frequencia: number }[];
+    mediaSoma: number;
+    atrasoDezenaSugerida: number;
+  };
+  timestamp: string;
 }
 
 export interface PushNotification {

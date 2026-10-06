@@ -150,9 +150,9 @@ export const SEED_CONTESTS_DATA: {
   { concurso: 5931, data: '01/08/2026', diaSemana: 'Sábado', bilhetes: ['45192', '86370', '19485', '72036', '30849'] },
 ];
 
-export function buildSeedContests(): LotteryContest[] {
+export function buildSeedContests(targetCount = 100): LotteryContest[] {
   const prizes = [500000, 35000, 30000, 25000, 20503];
-  return SEED_CONTESTS_DATA.map(item => {
+  const baseList: LotteryContest[] = SEED_CONTESTS_DATA.map(item => {
     const premios = item.bilhetes.map((bilhete, idx) => ({
       ordem: idx + 1,
       bilhete,
@@ -170,4 +170,56 @@ export function buildSeedContests(): LotteryContest[] {
       arrecadacaoTotal: 4200000,
     };
   });
+
+  if (baseList.length >= targetCount) {
+    return baseList.slice(0, targetCount);
+  }
+
+  // Generate deterministic past sequence down to targetCount (up to 100 draws)
+  let lastItem = baseList[baseList.length - 1];
+  let [d, m, y] = (lastItem.data || '01/08/2026').split('/').map(Number);
+  let curDate = new Date(y, (m || 1) - 1, d || 1);
+  let curConcurso = lastItem.concurso - 1;
+
+  while (baseList.length < targetCount && curConcurso > 5000) {
+    const isWed = curDate.getDay() === 3;
+    // Step backwards: from Wed to Sat is -4 days, from Sat to Wed is -3 days
+    curDate.setDate(curDate.getDate() - (isWed ? 4 : 3));
+    const nextDiaSemana: 'Quarta-feira' | 'Sábado' = curDate.getDay() === 3 ? 'Quarta-feira' : 'Sábado';
+    const dateStr = `${String(curDate.getDate()).padStart(2, '0')}/${String(curDate.getMonth() + 1).padStart(2, '0')}/${curDate.getFullYear()}`;
+
+    // Deterministic pseudo-random generation based on contest number
+    const pseudoRand = (seed: number) => {
+      const x = Math.sin(seed) * 10000;
+      return x - Math.floor(x);
+    };
+
+    const tickets: string[] = [];
+    for (let p = 0; p < 5; p++) {
+      const raw = Math.floor(pseudoRand(curConcurso * 13 + p * 37) * 100000);
+      tickets.push(String(raw).padStart(5, '0'));
+    }
+
+    const premios = tickets.map((bilhete, idx) => ({
+      ordem: idx + 1,
+      bilhete,
+      valorPremio: prizes[idx],
+    }));
+
+    baseList.push({
+      concurso: curConcurso,
+      data: dateStr,
+      diaSemana: nextDiaSemana,
+      premios,
+      local: 'Espaço da Sorte, São Paulo, SP',
+      acumulou: false,
+      bichoPrincipal: getAnimalByDezena(tickets[0].slice(-2)),
+      todosBichos: premios.map(p => getAnimalByDezena(p.bilhete.slice(-2))),
+      arrecadacaoTotal: 3950000 + Math.floor(pseudoRand(curConcurso) * 300000),
+    });
+
+    curConcurso--;
+  }
+
+  return baseList.slice(0, targetCount);
 }

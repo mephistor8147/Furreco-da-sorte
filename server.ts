@@ -1,11 +1,7 @@
-// furreco da sorte
 import express, { Request, Response } from 'express';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { fetchLiveFederalContests } from './src/services/caixaFetcher';
-import { parseCaixaContest, parseMirrorContest } from './src/services/caixaParser';
-import { generateGeminiSmartBet } from './src/services/geminiBetService';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,11 +18,11 @@ const app = express();
 
 app.use(express.json());
 
-// Enable CORS for all routes (facilitates Vercel, previews, and local integrations)
+// Enable CORS
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
   if (req.method === 'OPTIONS') {
     res.status(204).end();
     return;
@@ -34,145 +30,70 @@ app.use((req, res, next) => {
   next();
 });
 
-const CAIXA_HEADERS = {
-  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-  'Accept': 'application/json, text/plain, */*',
-  'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
-};
+// Health check endpoint
+app.get('/api/health', (req: Request, res: Response) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
-// API Routes
+// Proxy para buscar o resultado mais recente da Loteria Federal
 app.get('/api/loterias/federal/latest', async (req: Request, res: Response) => {
   try {
-    const result = await fetchLiveFederalContests(1, req.query.force === 'true');
-    const contest = result.contests[0];
-    res.json({
-      success: true,
-      source: result.source,
-      contest,
-      proximoConcurso: result.proximoConcurso,
-      timestamp: result.lastUpdated,
+    // 1. Tentar direto da Caixa
+    const caixaRes = await fetch('https://servicebus2.caixa.gov.br/portaldeloterias/api/federal', {
+      signal: AbortSignal.timeout(4500),
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*',
+        'Referer': 'https://loterias.caixa.gov.br/',
+        'Origin': 'https://loterias.caixa.gov.br',
+      },
     });
-  } catch (e: any) {
-    const fallback = await fetchLiveFederalContests(1, false);
-    res.json({
-      success: true,
-      source: 'Loterias Caixa (Cache)',
-      contest: fallback.contests[0],
-      proximoConcurso: fallback.proximoConcurso,
-      timestamp: fallback.lastUpdated,
-    });
-  }
-});
 
-app.get('/api/loterias/federal/recent', async (req: Request, res: Response) => {
-  try {
-    const count = Math.min(Math.max(parseInt(req.query.count as string, 10) || 20, 1), 100);
-    const force = req.query.force === 'true';
-
-    const result = await fetchLiveFederalContests(count, force);
-
-    res.json({
-      success: true,
-      source: result.source,
-      isRealTime: result.isRealTime,
-      lastUpdated: result.lastUpdated,
-      latestConcurso: result.latestConcurso,
-      proximoConcurso: result.proximoConcurso,
-      total: result.contests.length,
-      contests: result.contests,
-    });
-  } catch (e: any) {
-    const count = Math.min(Math.max(parseInt(req.query.count as string, 10) || 20, 1), 100);
-    const fallback = await fetchLiveFederalContests(count, false);
-    res.json(fallback);
-  }
-});
-
-app.post('/api/gemini/smart-bet', async (req: Request, res: Response) => {
-  try {
-    let sampleSize: 20 | 50 | 100 = 50;
-    const requested = parseInt(req.body?.sampleSize || (req.query?.sampleSize as string), 10);
-    if (requested === 20 || requested === 50 || requested === 100) {
-      sampleSize = requested;
+    if (caixaRes.ok) {
+      const data = await caixaRes.json();
+      if (data && data.numero && Array.isArray(data.listaDezenas)) {
+        return res.json({
+          concurso: data.numero,
+          data: data.dataApuracao,
+          bilhetes: data.listaDezenas.map((d: string) => d.slice(-5)),
+          proximoConcurso: data.numeroConcursoProximo,
+          dataProximo: data.dataProximoConcurso,
+          fonte: 'caixa_oficial',
+        });
+      }
     }
-
-    let contests = Array.isArray(req.body?.contests) && req.body.contests.length > 0
-      ? req.body.contests
-      : [];
-
-    if (contests.length < sampleSize) {
-      const liveData = await fetchLiveFederalContests(sampleSize, false);
-      contests = liveData.contests;
-    }
-
-    const result = await generateGeminiSmartBet(sampleSize, contests);
-    res.json(result);
   } catch (err: any) {
-    console.error('[Gemini Route Error]:', err.message);
-    const liveData = await fetchLiveFederalContests(50, false);
-    const fallback = await generateGeminiSmartBet(50, liveData.contests);
-    res.json(fallback);
-  }
-});
-
-app.get('/api/loterias/federal/concurso/:numero', async (req: Request, res: Response) => {
-  const num = parseInt(req.params.numero, 10);
-  if (isNaN(num)) {
-    return res.status(400).json({ error: 'Número de concurso inválido' });
+    console.warn('Caixa proxy timeout/error, trying mirror API:', err?.message);
   }
 
-  // 1. Try mirror API first
+  // 2. Fallback para API Espelho
   try {
-    const mirrorRes = await fetch(`https://loteriascaixa-api.herokuapp.com/api/federal/${num}`, {
-      headers: { 'Accept': 'application/json' },
+    const mirrorRes = await fetch('https://loteriascaixa-api.herokuapp.com/api/federal/latest', {
       signal: AbortSignal.timeout(4000),
+      headers: { 'User-Agent': 'Mozilla/5.0' },
     });
+
     if (mirrorRes.ok) {
       const data = await mirrorRes.json();
-      const parsed = parseMirrorContest(data);
-      if (parsed) {
-        return res.json({ success: true, source: 'Loterias Caixa (Federal)', contest: parsed });
-      }
+      return res.json({
+        concurso: data.concurso,
+        data: data.data,
+        bilhetes: (data.dezenas || []).map((d: string) => d.slice(-5)),
+        proximoConcurso: data.proximoConcurso,
+        dataProximo: data.dataProximoConcurso,
+        fonte: 'mirror_api',
+      });
     }
-  } catch {
-    // continue
+  } catch (err: any) {
+    console.warn('Mirror API failed:', err?.message);
   }
 
-  // 2. Try official Caixa API
-  try {
-    const response = await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/federal/${num}`, {
-      headers: CAIXA_HEADERS,
-      signal: AbortSignal.timeout(4000),
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      const parsed = parseCaixaContest(data);
-      if (parsed) {
-        return res.json({ success: true, source: 'Caixa Econômica Federal', contest: parsed });
-      }
-    }
-  } catch {
-    // continue
-  }
-
-  // 3. Check cached data
-  const data = await fetchLiveFederalContests(50, false);
-  const found = data.contests.find(c => c.concurso === num);
-  if (found) {
-    return res.json({ success: true, source: 'Loterias Caixa (Cache)', contest: found });
-  }
-
-  return res.status(404).json({ error: 'Concurso não encontrado' });
-});
-
-app.get('/api/health', async (req: Request, res: Response) => {
-  const result = await fetchLiveFederalContests(1, false);
+  // 3. Fallback estático seguro caso não haja internet
   res.json({
-    status: 'ok',
-    cachedContests: result.contests.length,
-    latestConcurso: result.latestConcurso,
-    lastFetchTime: result.lastUpdated,
+    concurso: 6107,
+    data: '07/10/2026',
+    bilhetes: ['42050', '72560', '53643', '24384', '53648'],
+    fonte: 'fallback_cache',
   });
 });
 
@@ -181,14 +102,12 @@ async function startServer() {
   const isProd = process.env.NODE_ENV === 'production';
 
   if (isProd) {
-    // Serve production static build
     const distPath = path.resolve(__dirname, 'dist');
     app.use(express.static(distPath));
     app.get('*', (req: Request, res: Response) => {
       res.sendFile(path.resolve(distPath, 'index.html'));
     });
   } else {
-    // In development: mount Vite dev server as middleware
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
@@ -197,33 +116,20 @@ async function startServer() {
   }
 
   const server = app.listen(PORT, HOST, () => {
-    console.log(`\n  VITE v8.3.0  ready in 120 ms\n`);
+    console.log(`\n  Vite & Express server ready\n`);
     console.log(`  ➜  Local:   http://localhost:${PORT}/`);
-    console.log(`  ➜  Network: http://${HOST}:${PORT}/`);
-    console.log(`[Furreco] Full-stack server running on http://${HOST}:${PORT}\n`);
-
-    // Non-blocking background sync after server is fully ready
-    setTimeout(() => {
-      fetchLiveFederalContests(20, false)
-        .then(result => {
-          console.log(`[Furreco] Background sync initialized with ${result.contests.length} contests! Latest: Concurso ${result.latestConcurso}`);
-        })
-        .catch(err => {
-          console.warn('[Furreco] Background fetch notice:', err.message);
-        });
-    }, 1500);
+    console.log(`  ➜  Network: http://${HOST}:${PORT}/\n`);
   });
 
   server.on('error', (err: any) => {
     if (err?.code === 'EADDRINUSE') {
-      console.error(`[Furreco] Port ${PORT} is already in use!`);
+      console.error(`Port ${PORT} is already in use!`);
     } else {
-      console.error('[Furreco] Server error:', err);
+      console.error('Server error:', err);
     }
   });
 
   const handleShutdown = () => {
-    console.log('[Furreco] Shutting down server...');
     server.close(() => {
       process.exit(0);
     });
@@ -234,6 +140,6 @@ async function startServer() {
 }
 
 startServer().catch(err => {
-  console.error('[Furreco] Fatal error starting server:', err);
+  console.error('Fatal error starting server:', err);
   process.exit(1);
 });

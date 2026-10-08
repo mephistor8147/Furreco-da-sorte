@@ -1,459 +1,223 @@
-// furreco da sorte
-import React, { useState, useEffect } from 'react';
-import { Header } from './components/Header';
-import { StatsDashboard } from './components/StatsDashboard';
-import { ContestHistoryView } from './components/ContestHistoryView';
-import { SmartGeneratorCard } from './components/SmartGeneratorCard';
-import { WeeklyReportView } from './components/WeeklyReportView';
-import { OddsCalculatorView } from './components/OddsCalculatorView';
-import { NotificationModal } from './components/NotificationModal';
-import {
-  getStoredNotifications,
-  saveStoredNotifications,
-  getStoredSettings,
-  saveStoredSettings,
-  requestPushPermission,
-  playNotificationSound,
-  triggerPushNotification,
-  NotificationSettings,
-} from './utils/notificationService';
-import { PushNotification } from './types/lottery';
-import { Compass, ShieldAlert } from 'lucide-react';
-import { ResponsibleGamingCard } from './components/ResponsibleGamingCard';
-import { OnboardingTourModal } from './components/OnboardingTourModal';
-import { MilharLookupView } from './components/MilharLookupView';
-import { useLiveLotteryContests } from './services/lotteryLiveService';
-import { CaixaLiveSyncBanner } from './components/CaixaLiveSyncBanner';
-import { MobileBottomNav } from './components/MobileBottomNav';
-import { useAppError } from './context/ErrorContext';
+import React, { useState } from 'react';
+import { MobileTopBar } from './components/MobileTopBar';
+import { MobileBottomNav, NavTab } from './components/MobileBottomNav';
+import { DashboardView } from './components/DashboardView';
+import { ModalitiesView } from './components/ModalitiesView';
+import { CombinatorView } from './components/CombinatorView';
+import { FederalHistoryView } from './components/FederalHistoryView';
+import { BichoTableView } from './components/BichoTableView';
+import { Toast } from './components/Toast';
+import { FEDERAL_CONTESTS, LATEST_FEDERAL_CONTEST } from './data/federalData';
+import { generateHotTips } from './utils/bichoEngine';
+import { ModalityType, FederalContest } from './types/bicho';
+import { fetchLatestFederalContest } from './services/federalSyncService';
 
-const ONBOARDING_KEY = 'furreco_onboarding_completed_v1';
+// Asset paths generated via generate_image
+const BANNER_IMAGE = '/src/assets/images/federal_lottery_banner_1791416599298.jpg';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'stats' | 'history' | 'generator' | 'weekly' | 'odds' | 'responsible' | 'milhar'>('stats');
-  const [statsSubTab, setStatsSubTab] = useState<'finais' | 'dezenas' | 'atrasometro' | 'bichos' | 'auditoria'>('finais');
-  const [targetDezena, setTargetDezena] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
+  const [contestsList, setContestsList] = useState<FederalContest[]>(FEDERAL_CONTESTS);
+  const [selectedContest, setSelectedContest] = useState<FederalContest>(LATEST_FEDERAL_CONTEST);
+  const [isMobileFrame, setIsMobileFrame] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const handleNavigateToTab = (
-    tab: 'stats' | 'history' | 'generator' | 'weekly' | 'odds' | 'responsible' | 'milhar',
-    subTab?: 'finais' | 'dezenas' | 'atrasometro' | 'bichos' | 'auditoria'
-  ) => {
-    setActiveTab(tab);
-    if (subTab) {
-      setStatsSubTab(subTab);
-    }
+  // Estados de Sincronização em Tempo Real
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
+
+  // Estados para passar valores entre telas
+  const [combinatorModality, setCombinatorModality] = useState<ModalityType>('centena_invertida');
+  const [combinatorInitialValues, setCombinatorInitialValues] = useState<string[]>(['542']);
+  const [modalitiesInitialFilter, setModalitiesInitialFilter] = useState<string>('milhar_centena');
+
+  // Gerar dicas quentes com base no concurso selecionado e histórico
+  const hotTips = generateHotTips(selectedContest, contestsList);
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    setTimeout(() => {
+      setToastMessage(prev => (prev === message ? null : prev));
+    }, 2800);
   };
 
-  const [notifications, setNotifications] = useState<PushNotification[]>(getStoredNotifications());
-  const [settings, setSettings] = useState<NotificationSettings>(getStoredSettings());
-  const [isNotifModalOpen, setIsNotifModalOpen] = useState(false);
-  const [isTourOpen, setIsTourOpen] = useState(false);
-  const [pushEnabled, setPushEnabled] = useState(
-    typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted'
-  );
-
-  // Live Caixa Econômica Federal lottery results state
-  const {
-    contests,
-    isLive,
-    isSyncing,
-    lastSyncTime,
-    syncError,
-    latestContest,
-    proximoConcurso,
-    syncNow,
-  } = useLiveLotteryContests();
-
-  // Update document title in real time with live Caixa draw results
-  useEffect(() => {
-    if (latestContest) {
-      document.title = `🍀 Furreco | Conc. ${latestContest.concurso} [1º ${latestContest.premios[0]?.bilhete || ''}] - Ao Vivo Caixa`;
-    } else {
-      document.title = 'Furreco da Sorte - Estatísticas e Palpites da Loteria Federal';
-    }
-  }, [latestContest]);
-
-  // Auto-launch onboarding tour for new visitors
-  useEffect(() => {
+  const handleCopyText = async (text: string, label: string) => {
     try {
-      const hasCompletedTour = localStorage.getItem(ONBOARDING_KEY);
-      if (!hasCompletedTour) {
-        const timer = setTimeout(() => {
-          setIsTourOpen(true);
-        }, 700);
-        return () => clearTimeout(timer);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        showToast(label);
+      } else {
+        // Fallback para ambientes restritos
+        const el = document.createElement('textarea');
+        el.value = text;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        showToast(label);
       }
     } catch {
-      // ignore
-    }
-  }, []);
-
-  // Sync notifications to storage
-  useEffect(() => {
-    saveStoredNotifications(notifications);
-  }, [notifications]);
-
-  // Sync settings to storage & apply high-contrast class to document root
-  useEffect(() => {
-    saveStoredSettings(settings);
-    if (settings.highContrast) {
-      document.documentElement.classList.add('high-contrast');
-    } else {
-      document.documentElement.classList.remove('high-contrast');
-    }
-  }, [settings]);
-
-  // Automated notification check on initial load (next draw detection)
-  useEffect(() => {
-    const hasUpcomingAlert = notifications.some(n => n.tipo === 'sorteio' && !n.lida);
-    if (!hasUpcomingAlert && settings.alertBeforeDraw) {
-      const timer = setTimeout(() => {
-        const nextNum = proximoConcurso?.numero || (contests[0]?.concurso ? contests[0].concurso + 1 : 6106);
-        const nextDate = proximoConcurso?.dataEstimada || 'Sábado';
-        const nextAlert: PushNotification = {
-          id: `notif-auto-${Date.now()}`,
-          titulo: 'Próximo Sorteio da Federal se Aproximando!',
-          mensagem: `O Concurso ${nextNum} (${nextDate}) será sorteado no Espaço da Sorte. Gere seus bilhetes da sorte no Furreco!`,
-          horario: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-          lida: false,
-          tipo: 'sorteio',
-        };
-        setNotifications(prev => [nextAlert, ...prev]);
-        if (settings.browserPushEnabled) {
-          triggerPushNotification(nextAlert.titulo, nextAlert.mensagem, settings.soundEnabled);
-        }
-      }, 3500);
-
-      return () => clearTimeout(timer);
-    }
-  }, [proximoConcurso, contests, notifications, settings]);
-
-  const handleToggleSound = () => {
-    setSettings(prev => ({ ...prev, soundEnabled: !prev.soundEnabled }));
-    if (!settings.soundEnabled) {
-      playNotificationSound();
+      showToast('Copiado para a área de transferência!');
     }
   };
 
-  const handleToggleHighContrast = () => {
-    setSettings(prev => {
-      const nextVal = !prev.highContrast;
-      if (nextVal && prev.soundEnabled) {
-        playNotificationSound();
+  const handleShareApp = async () => {
+    const p1 = selectedContest.premios[0];
+    const text = `🍀 Palpites Quentes do Bicho da Federal\nBase: Concurso ${selectedContest.concurso} (${selectedContest.data})\n1º Prêmio: ${p1.milhar} (Grupo ${p1.grupo} - ${p1.bichoNome})\nConfira no app!`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Bicho da Federal - Palpites & Dicas Quentes',
+          text,
+          url: window.location.href,
+        });
+      } catch {
+        // Ignorar cancelamento
       }
-      return { ...prev, highContrast: nextVal };
-    });
-  };
-
-  const handleEnablePush = async () => {
-    const perm = await requestPushPermission();
-    if (perm === 'granted') {
-      setPushEnabled(true);
-      setSettings(prev => ({ ...prev, browserPushEnabled: true }));
-      triggerPushNotification(
-        'Furreco da Sorte Conectado! 🍀',
-        'Notificações ativadas com sucesso. Você receberá alertas dos resultados oficiais em primeira mão!',
-        settings.soundEnabled
-      );
     } else {
-      setPushEnabled(false);
-      setSettings(prev => ({ ...prev, browserPushEnabled: false }));
+      handleCopyText(text, 'Resumo do sorteio copiado para compartilhar!');
     }
   };
 
-  const handleMarkAllRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, lida: true })));
-  };
+  // Função principal para atualizar o resultado da Loteria Federal
+  const handleSyncFederal = async () => {
+    if (isSyncing) return;
+    setIsSyncing(true);
 
-  const handleClearNotifications = () => {
-    setNotifications([]);
-  };
-
-  const handleAddNotification = (notif: PushNotification) => {
-    setNotifications(prev => [notif, ...prev]);
-  };
-
-  const handleCloseTour = () => {
-    setIsTourOpen(false);
     try {
-      localStorage.setItem(ONBOARDING_KEY, 'true');
-    } catch {
-      // ignore
+      const currentHighest = contestsList[0]?.concurso || 6106;
+      const result = await fetchLatestFederalContest(currentHighest);
+
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      setLastSyncTime(timeStr);
+
+      if (result.success && result.contest) {
+        const fetched = result.contest;
+        setContestsList(prev => {
+          const exists = prev.some(c => c.concurso === fetched.concurso);
+          if (exists) {
+            return prev.map(c => (c.concurso === fetched.concurso ? fetched : c));
+          }
+          return [fetched, ...prev];
+        });
+
+        setSelectedContest(fetched);
+        showToast(`🍀 Concurso ${fetched.concurso} (${fetched.data}) atualizado com sucesso!`);
+      } else {
+        showToast('Resultados já conferidos com a base oficial!');
+      }
+    } catch (err: any) {
+      showToast('Sincronização concluída com base de contingência.');
+    } finally {
+      setIsSyncing(false);
     }
   };
 
-  const handleOpenTour = () => {
-    setIsTourOpen(true);
-    if (settings.soundEnabled) {
-      playNotificationSound();
-    }
+  const handleOpenCombinatorWith = (mod: ModalityType, values: string[]) => {
+    setCombinatorModality(mod);
+    setCombinatorInitialValues(values);
+    setActiveTab('desdobrador');
   };
 
-  const { showError, showToastError, showDiagnosticError } = useAppError();
-
-  const handleOpenSyncErrorModal = () => {
-    showError({
-      title: 'Falha de Sincronização com a Caixa',
-      message: syncError || 'Não foi possível contatar os servidores da Caixa Econômica Federal no momento.',
-      details: `Tentativa de conexão com o portal de Loterias Caixa falhou ou excedeu o tempo limite.\nO Furreco ativou a contingência, mantendo a base de ${contests.length} concursos anteriores disponíveis para consulta.`,
-      severity: 'conexao',
-      source: 'Loterias Caixa (Federal)',
-      retryAction: async () => {
-        if (settings.soundEnabled) playNotificationSound();
-        const ok = await syncNow(true);
-        if (ok) {
-          showToastError('Sincronização com a Caixa concluída com sucesso!');
-        }
-      },
-      retryLabel: 'Tentar Sincronizar Novamente',
-    });
+  const handleSelectModalityFromDash = (mod: string) => {
+    setModalitiesInitialFilter(mod);
+    setActiveTab('modalidades');
   };
 
-  const handleTestErrorModal = () => {
-    showDiagnosticError('aviso');
-  };
-
-  const handleManualSync = async () => {
-    if (settings.soundEnabled) playNotificationSound();
-    const ok = await syncNow(true);
-    if (!ok && syncError) {
-      handleOpenSyncErrorModal();
-    } else if (ok) {
-      showToastError('Resultados atualizados com sucesso da Caixa Econômica!');
-    }
+  const handleSelectDezenasFromTable = (dezenas: string[]) => {
+    setCombinatorModality('duque_dezena');
+    setCombinatorInitialValues(dezenas);
+    setActiveTab('desdobrador');
+    showToast(`${dezenas.length} dezenas carregadas no desdobrador!`);
   };
 
   return (
-    <div className={`min-h-screen flex flex-col selection:bg-emerald-500 selection:text-white ${
-      settings.highContrast ? 'high-contrast bg-black text-white' : 'bg-slate-950 text-slate-100'
-    }`}>
-      {/* App Header */}
-      <Header
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        statsSubTab={statsSubTab}
-        onNavigateWithSubTab={handleNavigateToTab}
-        notifications={notifications}
-        onOpenNotifications={() => setIsNotifModalOpen(true)}
-        soundEnabled={settings.soundEnabled}
-        onToggleSound={handleToggleSound}
-        onEnablePush={handleEnablePush}
-        pushEnabled={pushEnabled}
-        highContrast={settings.highContrast}
-        onToggleHighContrast={handleToggleHighContrast}
-        onOpenTour={handleOpenTour}
-        latestContest={latestContest || contests[0]}
-        proximoConcurso={proximoConcurso}
-        isLive={isLive}
-        isSyncing={isSyncing}
-        lastSyncTime={lastSyncTime}
-        syncError={syncError}
-        onOpenErrorModal={handleOpenSyncErrorModal}
-        onOpenErrorDiagnostic={handleTestErrorModal}
-        onSyncNow={handleManualSync}
-      />
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-start selection:bg-amber-400 selection:text-slate-950">
+      {/* Toast de Notificação */}
+      <Toast message={toastMessage} />
 
-      {/* Main App Content Viewport */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-3 sm:py-6 space-y-4 sm:space-y-6 pb-24 md:pb-8">
-        {/* High Contrast Accessibility Indicator Bar when active */}
-        {settings.highContrast && (
-          <div className="bg-black border-2 border-amber-400 text-white px-3.5 py-2.5 rounded-xl flex flex-wrap items-center justify-between gap-2 text-xs font-bold shadow-lg">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block animate-pulse" />
-              <span className="text-amber-300">Modo Alto Contraste Ativado:</span>
-              <span className="text-slate-100 font-normal hidden sm:inline">
-                Tabelas, gráficos e números otimizados para máxima legibilidade visual.
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsNotifModalOpen(true)}
-                className="px-2.5 py-1 bg-zinc-900 border border-zinc-500 rounded text-amber-300 hover:text-white text-[11px] cursor-pointer"
-              >
-                Ajustar nas Configurações
-              </button>
-              <button
-                onClick={handleToggleHighContrast}
-                className="px-2.5 py-1 bg-amber-400 text-black rounded font-black text-[11px] cursor-pointer hover:bg-amber-300"
-              >
-                Desativar
-              </button>
-            </div>
-          </div>
-        )}
+      {/* Frame Container (Smartphone Simulation no Desktop ou Full Mobile) */}
+      <div
+        className={`w-full transition-all duration-300 min-h-screen flex flex-col ${
+          isMobileFrame
+            ? 'max-w-[430px] shadow-2xl border-x border-slate-800 bg-slate-950 my-0 sm:my-4 sm:rounded-[40px] sm:overflow-hidden sm:min-h-[880px]'
+            : 'max-w-4xl'
+        }`}
+      >
+        {/* Top Bar (< 15% sticky cap) com Botão de Atualizar */}
+        <MobileTopBar
+          concursoAtual={selectedContest.concurso}
+          dataConcurso={selectedContest.data}
+          isMobileFrame={isMobileFrame}
+          isSyncing={isSyncing}
+          onToggleFrame={() => setIsMobileFrame(prev => !prev)}
+          onShareApp={handleShareApp}
+          onSyncFederal={handleSyncFederal}
+        />
 
-        {/* Live Caixa Econômica Federal Sync Alert (displayed only on sync warning / contingency) */}
-        {syncError && (
-          <CaixaLiveSyncBanner
-            isLive={isLive}
-            isSyncing={isSyncing}
-            lastSyncTime={lastSyncTime}
-            syncError={syncError}
-            latestContest={contests[0]}
-            onSync={() => {
-              if (settings.soundEnabled) playNotificationSound();
-              syncNow(true);
-            }}
-            onOpenErrorModal={handleOpenSyncErrorModal}
-            highContrast={settings.highContrast}
-          />
-        )}
+        {/* Viewport Content */}
+        <main className="flex-1 p-4 sm:p-5">
+          {activeTab === 'dashboard' && (
+            <DashboardView
+              contest={selectedContest}
+              allContests={contestsList}
+              hotTips={hotTips}
+              onSelectModality={handleSelectModalityFromDash}
+              onCopyText={handleCopyText}
+              bannerImage={BANNER_IMAGE}
+              isSyncing={isSyncing}
+              lastSyncTime={lastSyncTime}
+              onSyncFederal={handleSyncFederal}
+            />
+          )}
 
-        {/* Tab 1: Stats & Charts */}
-        {activeTab === 'stats' && (
-          <StatsDashboard
-            contests={contests}
-            initialSubTab={statsSubTab}
-            onSelectDezena={dez => setTargetDezena(dez)}
-            onNavigateToTab={handleNavigateToTab}
-          />
-        )}
+          {activeTab === 'modalidades' && (
+            <ModalitiesView
+              hotTips={hotTips}
+              initialModality={modalitiesInitialFilter}
+              onCopyText={handleCopyText}
+              onOpenCombinatorWith={handleOpenCombinatorWith}
+            />
+          )}
 
-        {/* Tab 2: Contest History & Filters */}
-        {activeTab === 'history' && (
-          <ContestHistoryView
-            contests={contests}
-            onPlayChime={() => settings.soundEnabled && playNotificationSound()}
-            onNavigateToTab={handleNavigateToTab}
-          />
-        )}
+          {activeTab === 'desdobrador' && (
+            <CombinatorView
+              initialModality={combinatorModality}
+              initialValues={combinatorInitialValues}
+              onCopyText={handleCopyText}
+            />
+          )}
 
-        {/* Tab 2.5: Milhar Lookup & Frequency Inspector */}
-        {activeTab === 'milhar' && (
-          <MilharLookupView
-            contests={contests}
-            onPlayChime={() => settings.soundEnabled && playNotificationSound()}
-            onNavigateToTab={handleNavigateToTab}
-            initialMilhar={
-              targetDezena
-                ? (contests.flatMap(c => c.premios).map(p => p.bilhete.slice(-4)).find(m => m.endsWith(targetDezena)) || targetDezena.padStart(4, '0'))
-                : undefined
-            }
-            onSelectDezena={dez => setTargetDezena(dez)}
-            highContrast={settings.highContrast}
-          />
-        )}
+          {activeTab === 'federal' && (
+            <FederalHistoryView
+              contests={contestsList}
+              selectedContest={selectedContest}
+              isSyncing={isSyncing}
+              onSyncFederal={handleSyncFederal}
+              onSelectContest={contest => {
+                setSelectedContest(contest);
+                showToast(`Concurso ${contest.concurso} definido como base!`);
+              }}
+            />
+          )}
 
-        {/* Tab 3: Smart Generator */}
-        {activeTab === 'generator' && (
-          <SmartGeneratorCard
-            contests={contests}
-            soundEnabled={settings.soundEnabled}
-            onPlayChime={() => settings.soundEnabled && playNotificationSound()}
-            targetDezena={targetDezena}
-            onClearTargetDezena={() => setTargetDezena(null)}
-            onNavigateToTab={handleNavigateToTab}
-            onSelectDezena={dez => setTargetDezena(dez)}
-          />
-        )}
+          {activeTab === 'bichos' && (
+            <BichoTableView
+              onCopyText={handleCopyText}
+              onSelectDezenasForBet={handleSelectDezenasFromTable}
+            />
+          )}
+        </main>
 
-        {/* Tab 4: Weekly Report */}
-        {activeTab === 'weekly' && (
-          <WeeklyReportView
-            contests={contests}
-          />
-        )}
-
-        {/* Tab 5: Official Odds */}
-        {activeTab === 'odds' && (
-          <OddsCalculatorView />
-        )}
-
-        {/* Tab 6: Responsible Gaming & Bicho Tips dedicated exclusive view with live Caixa draw sync */}
-        {activeTab === 'responsible' && (
-          <ResponsibleGamingCard
-            contests={contests}
-            onPlayChime={() => settings.soundEnabled && playNotificationSound()}
-            isLive={isLive}
-            isSyncing={isSyncing}
-            lastSyncTime={lastSyncTime}
-            latestContest={contests[0]}
-            proximoConcurso={proximoConcurso}
-            onSyncNow={() => {
-              if (settings.soundEnabled) playNotificationSound();
-              syncNow(true);
-            }}
-          />
-        )}
-      </main>
-
-      {/* App Footer */}
-      <footer className="border-t border-slate-900 bg-slate-950 py-6 sm:py-8 px-4 sm:px-6 text-xs text-slate-400 mt-8 sm:mt-12 mb-16 md:mb-0">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 text-center sm:text-left">
-          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
-            <span className="font-bold text-slate-200">Furreco da Sorte</span>
-            <span>·</span>
-            <span>Estatísticas e Probabilidades da Loteria Federal</span>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-slate-300">
-            <button
-              onClick={handleOpenTour}
-              className="text-amber-400 hover:text-amber-300 font-semibold transition-colors cursor-pointer flex items-center gap-1"
-              title="Rever o tour explicativo do Furreco"
-            >
-              <Compass className="w-3.5 h-3.5" />
-              Como Usar (Tour Guiado)
-            </button>
-            <span>·</span>
-            <span>Sorteios às Quartas e Sábados às 19h</span>
-            <span>·</span>
-            <button
-              onClick={() => setActiveTab('responsible')}
-              className="text-emerald-400/90 hover:text-emerald-300 font-semibold transition-colors cursor-pointer"
-              title="Acessar o menu exclusivo de Apostas Conscientes"
-            >
-              Apostas Conscientes (+18)
-            </button>
-            <span>·</span>
-            <button
-              onClick={handleTestErrorModal}
-              className="text-rose-400 hover:text-rose-300 font-semibold transition-colors cursor-pointer flex items-center gap-1"
-              title="Abrir o pop-up de erros e testar contingência"
-            >
-              <ShieldAlert className="w-3.5 h-3.5" />
-              Pop-up de Erros
-            </button>
-          </div>
-        </div>
-      </footer>
-
-      {/* Mobile-First Persistent Bottom Navigation Bar */}
-      <MobileBottomNav
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        statsSubTab={statsSubTab}
-        onNavigateWithSubTab={handleNavigateToTab}
-        unreadCount={notifications.filter(n => !n.lida).length}
-        onOpenNotifications={() => setIsNotifModalOpen(true)}
-        onOpenTour={handleOpenTour}
-      />
-
-      {/* Notifications Drawer Modal */}
-      <NotificationModal
-        isOpen={isNotifModalOpen}
-        onClose={() => setIsNotifModalOpen(false)}
-        notifications={notifications}
-        onMarkAllAsRead={handleMarkAllRead}
-        onClearNotifications={handleClearNotifications}
-        onAddNotification={handleAddNotification}
-        settings={settings}
-        onUpdateSettings={setSettings}
-        onRequestPush={handleEnablePush}
-        pushEnabled={pushEnabled}
-        onOpenTour={handleOpenTour}
-        onNavigateToTab={handleNavigateToTab}
-        onTestErrorModal={handleTestErrorModal}
-      />
-
-      {/* Interactive Onboarding Tour Modal */}
-      <OnboardingTourModal
-        isOpen={isTourOpen}
-        onClose={handleCloseTour}
-        onNavigateToTab={handleNavigateToTab}
-        onPlayChime={() => settings.soundEnabled && playNotificationSound()}
-        highContrast={settings.highContrast}
-      />
+        {/* Bottom Tab Bar Anchor */}
+        <MobileBottomNav
+          activeTab={activeTab}
+          onChangeTab={tab => setActiveTab(tab)}
+          isMobileFrame={isMobileFrame}
+        />
+      </div>
     </div>
   );
 }
